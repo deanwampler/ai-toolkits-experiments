@@ -1,1 +1,4 @@
 ollama-*.log
+llama.cpp/quantize/*.log
+llama.cpp/quantize/gguf_models
+llama.cpp/quantize/original_models
