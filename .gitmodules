@@ -1,5 +1,5 @@
 [submodule "apple/axlearn"]
-	path = apple/axlearn
+	path = apple/axlearn/axlearn-git
 	url = git@github.com:apple/axlearn.git
 [submodule "apple/apple-ml-aim/ml-aim"]
 	path = apple/apple-ml-aim/ml-aim
