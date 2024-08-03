@@ -1,0 +1,15 @@
+[submodule "apple/axlearn"]
+	path = apple/axlearn
+	url = git@github.com:apple/axlearn.git
+[submodule "apple/apple-ml-aim/ml-aim"]
+	path = apple/apple-ml-aim/ml-aim
+	url = https://github.com/apple/ml-aim
+[submodule "apple/mlx-lm/mlx-deep-dive"]
+	path = apple/mlx-lm/mlx-deep-dive
+	url = git@github.com:marshmellow77/mlx-deep-dive.git
+[submodule "mlfoundations/dclm"]
+	path = mlfoundations/dclm
+	url = git@github.com:mlfoundations/dclm.git
+[submodule "mlfoundations/datacomp"]
+	path = mlfoundations/datacomp
+	url = https://github.com/mlfoundations/datacomp.git

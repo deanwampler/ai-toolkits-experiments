@@ -1,0 +1,23 @@
+What is the capitol of Assyria?
+
+Are you a large language model?
+
+Show me a python function that returns a list of of the Fibonacci sequence up to an input number of values.
+
+Show me a scala function that returns a list of of the Fibonacci sequence up to an input number of values.
+
+Show me a haskell function that returns a list of of the Fibonacci sequence up to an input number of values.
+
+There is a bug in the following function. What is it? 
+def fibonacci(n):
+    fib_sequence = [0]
+    while len(fib_sequence) < n:
+        fib_sequence.append(fib_sequence[-1] + fib_sequence[-2])
+    return fib_sequence
+
+There is a bug in the following function. What is it? 
+def fibonacci(n):
+    fib_sequence = [-1, 0]
+    while len(fib_sequence) < n:
+        fib_sequence.append(fib_sequence[-1] + fib_sequence[-2])
+    return fib_sequence
