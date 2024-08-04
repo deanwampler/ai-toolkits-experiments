@@ -1,4 +1,9 @@
-ollama-*.log
-llama.cpp/quantize/*.log
 llama.cpp/quantize/gguf_models
 llama.cpp/quantize/original_models
+mozilla-ocho/llava-*.llamafile
+
+# Ignore log directories where I capture output.
+llama.cpp/quantize/logs/
+ollama/play/logs/
+mozilla-ocho/logs/
+mojo/logs/

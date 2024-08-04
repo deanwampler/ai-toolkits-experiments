@@ -16,3 +16,9 @@
 [submodule "llama.cpp/llama.cpp"]
 	path = llama.cpp/llama.cpp
 	url = https://github.com/ggerganov/llama.cpp
+[submodule "mojo/max"]
+	path = mojo/max
+	url = https://github.com/modularml/max.git
+[submodule "mozilla-ocho/llamafile"]
+	path = mozilla-ocho/llamafile
+	url = git@github.com:Mozilla-Ocho/llamafile.git
