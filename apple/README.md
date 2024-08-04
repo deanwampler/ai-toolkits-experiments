@@ -1,5 +1,7 @@
 # README for apple
 
+First, set up a Python environment with `venv` or `conda`, if you want to keep things separated. (You may even want separate environments for the following projects.)
+
 Projects:
 
 ## `apple-ml-aim`
