@@ -3,7 +3,8 @@ llama.cpp/quantize/original_models
 mozilla-ocho/llava-*.llamafile
 
 # Ignore log directories where I capture output.
+dclm/logs/
 llama.cpp/quantize/logs/
-ollama/play/logs/
-mozilla-ocho/logs/
 mojo/logs/
+mozilla-ocho/logs/
+ollama/play/logs/

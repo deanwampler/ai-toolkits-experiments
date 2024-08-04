@@ -22,3 +22,6 @@
 [submodule "mozilla-ocho/llamafile"]
 	path = mozilla-ocho/llamafile
 	url = git@github.com:Mozilla-Ocho/llamafile.git
+[submodule "dclm/dclm"]
+	path = dclm/dclm
+	url = git@github.com:mlfoundations/dclm.git
