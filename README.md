@@ -1,4 +1,4 @@
-# README for ai-toolkits-experiments
+# README for `ai-toolkits-experiments`
 
 My private repo for experimenting with different Gen AI toolkits, especially for local execution on systems like Apple Silicon, application patterns like RAG and agents, etc.
 
@@ -15,3 +15,7 @@ Or after cloning the repo, do the following:
 ```shell
 git submodule update --init --recursive
 ```
+
+## Notes on Particular Projects
+
+Most of the project subfolders have their own READMEs. In a few cases, additional commands are required to get started, which are documented in the corresponding README.

@@ -1,7 +1,7 @@
 #!/usr/bin/env zsh
 # Adapted from https://kaitchup.substack.com/p/gguf-quantization-for-fast-and-memory?utm_source=substack&utm_medium=email
 
-LLAMA_CPP_REPO=$(realpath ../llama.cpp-git)
+LLAMA_CPP_REPO=$(realpath ../llama.cpp)
 DEFAULT_MODEL_NAME="Qwen/Qwen1.5-1.8B" 
 # Allowed quantization formats (are there others?):
 ALLOWED_METHODS=('q2_k' 'q3_k_m' 'q4_0' 'q4_k_m' 'q5_0' 'q5_k_m' 'q6_k' 'q8_0')
@@ -138,6 +138,8 @@ fi
 [[ -n "$model_name" ]] || model_name="$DEFAULT_MODEL_NAME"
 [[ ${#format_methods[@]} -gt 0 ]] || format_methods=(${DEFAULT_METHODS[@]})
 check_for_allowed_methods "${format_methods[@]}"
+
+[[ -d "$LLAMA_CPP_REPO" ]] || error "LLAMA_CPP_REPO directory not found: $LLAMA_CPP_REPO"
 
 echo "$0:"
 echo "Model:     $model_name"

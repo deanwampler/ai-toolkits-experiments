@@ -1,5 +1,7 @@
 # README for apple
 
+First, set up a Python environment with `venv` or `conda`, if you want to keep things separated. (You may even want separate environments for the following projects.)
+
 Projects:
 
 ## `apple-ml-aim`
@@ -19,3 +21,8 @@ Uses submodule [`axlearn`](https://github.com/apple/axlearn).
 Exploring Apple's MLX deep learning framework.
 
 The [`mlx-deep-dive`](https://github.com/apple/mlx-deep-dive) submodule is the git repo for [this blog post](https://towardsdatascience.com/deploying-llms-locally-with-apples-mlx-framework-2b3862049a93).
+
+
+## `mlx-examples`
+
+Apple's MLX examples. The submodule [`mlx-examples`](https://github.com/ml-explore/mlx-examples).

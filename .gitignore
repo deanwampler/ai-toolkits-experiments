@@ -8,3 +8,6 @@ llama.cpp/quantize/logs/
 mojo/logs/
 mozilla-ocho/logs/
 ollama/play/logs/
+
+# A user download that is optional in `apple/mlx-whisper`.
+MLKDream_64kb.mp3
