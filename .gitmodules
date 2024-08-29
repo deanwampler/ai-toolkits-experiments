@@ -25,3 +25,6 @@
 [submodule "dclm/dclm"]
 	path = dclm/dclm
 	url = git@github.com:mlfoundations/dclm.git
+[submodule "mlx-examples"]
+	path = mlx-examples
+	url = git@github.com:ml-explore/mlx-examples.git
