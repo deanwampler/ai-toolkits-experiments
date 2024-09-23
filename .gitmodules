@@ -23,5 +23,5 @@
 	path = mozilla-ocho/llamafile
 	url = git@github.com:Mozilla-Ocho/llamafile.git
 [submodule "mlx-examples"]
-	path = mlx-examples
+	path = apple/mlx-lm/mlx-examples-git
 	url = git@github.com:ml-explore/mlx-examples.git

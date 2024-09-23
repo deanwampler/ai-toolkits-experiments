@@ -5,7 +5,8 @@ Exploring Apple's MLX deep learning framework.
 Contents:
 
 * `mlx-deep-dive-git`: directory for the git repo for [this blog post](https://towardsdatascience.com/deploying-llms-locally-with-apples-mlx-framework-2b3862049a93).
-* `experiments`: Contains `mlx-lm-example.py`, which is basically the same as `mlx-deep-dive-git/mlx-test-deployment.py`, with a few changes. 
+* `mlx-examples-git`: directory for the git repo for Apple's MLX examples.
+* `experiments`: Contains `mlx-lm-example.py`, which is basically the same as `mlx-deep-dive-git/mlx-test-deployment.py`, with a few changes. At this time, this folder doesn't have any code based on `mlx-examples-git`.
 
 ## The HF MLX Community
 
