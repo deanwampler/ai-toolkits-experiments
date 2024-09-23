@@ -4,7 +4,10 @@ codellama:13b
 starcoder2
 starcoder2:7b
 starcoder2:15b
-codestral)
+codestral
+granite-code:3b
+granite-code:8b
+granite-code:20b)
 
 for model in ${models[@]}
 do
