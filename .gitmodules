@@ -14,7 +14,7 @@
 	path = mlfoundations/datacomp
 	url = https://github.com/mlfoundations/datacomp.git
 [submodule "llama.cpp/llama.cpp"]
-	path = llama.cpp/llama.cpp
+	path = llama.cpp/llama.cpp-git
 	url = https://github.com/ggerganov/llama.cpp
 [submodule "mojo/max"]
 	path = mojo/max
