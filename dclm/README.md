@@ -2,6 +2,6 @@
 
 Experiments with DataComp-LM from MIT:
 
-* https://github.com/mlfoundations/dclm
+* [`dclm-git`](https://github.com/mlfoundations/dclm): The `dclm` repo.
 
 > **NOTE:** Consider setting up a Python environment with `venv` or `conda`, if you want to keep things separated.

@@ -23,7 +23,7 @@
 	path = mozilla-ocho/llamafile
 	url = git@github.com:Mozilla-Ocho/llamafile.git
 [submodule "dclm/dclm"]
-	path = dclm/dclm
+	path = dclm/dclm-git
 	url = git@github.com:mlfoundations/dclm.git
 [submodule "mlx-examples"]
 	path = mlx-examples
