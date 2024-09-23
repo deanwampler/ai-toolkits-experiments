@@ -8,10 +8,10 @@
 	path = apple/mlx-lm/mlx-deep-dive-git
 	url = git@github.com:marshmellow77/mlx-deep-dive.git
 [submodule "mlfoundations/dclm"]
-	path = mlfoundations/dclm
+	path = mlfoundations/dclm-git
 	url = git@github.com:mlfoundations/dclm.git
 [submodule "mlfoundations/datacomp"]
-	path = mlfoundations/datacomp
+	path = mlfoundations/datacomp-git
 	url = https://github.com/mlfoundations/datacomp.git
 [submodule "llama.cpp/llama.cpp"]
 	path = llama.cpp/llama.cpp-git
@@ -22,9 +22,6 @@
 [submodule "mozilla-ocho/llamafile"]
 	path = mozilla-ocho/llamafile
 	url = git@github.com:Mozilla-Ocho/llamafile.git
-[submodule "dclm/dclm"]
-	path = dclm/dclm-git
-	url = git@github.com:mlfoundations/dclm.git
 [submodule "mlx-examples"]
 	path = mlx-examples
 	url = git@github.com:ml-explore/mlx-examples.git
