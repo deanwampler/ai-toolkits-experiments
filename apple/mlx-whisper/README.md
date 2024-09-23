@@ -1,4 +1,4 @@
-# MLX Whisper
+# README for `apple/mlx-whisper`
 
 This is code for using the OpenAI's Whisper speech-to-text models on Apple Silicon adapted from https://simonwillison.net/2024/Aug/13/mlx-whisper/.
 

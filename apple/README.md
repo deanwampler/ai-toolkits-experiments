@@ -4,7 +4,7 @@ First, set up a Python environment with `venv` or `conda`, if you want to keep t
 
 Projects:
 
-## `apple-ml-aim`
+## `ml-aim`
 
 Experiment with the `ml-aim` library for _AIM: Autoregressive Image Models_, [Scalable Pre-training of Large Autoregressive Image Models](https://arxiv.org/abs/2401.08541).
 

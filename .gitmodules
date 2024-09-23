@@ -5,7 +5,7 @@
 	path = apple/ml-aim/ml-aim-git
 	url = https://github.com/apple/ml-aim
 [submodule "apple/mlx-lm/mlx-deep-dive"]
-	path = apple/mlx-lm/mlx-deep-dive
+	path = apple/mlx-lm/mlx-deep-dive-git
 	url = git@github.com:marshmellow77/mlx-deep-dive.git
 [submodule "mlfoundations/dclm"]
 	path = mlfoundations/dclm
