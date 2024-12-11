@@ -60,4 +60,17 @@ response = generate(
 
 He got an image that isn't great, but not terrible considering the runtime situation.
 
+On my M1 Mac Studio with 64GB of memory, it didn't finish generating the full SVG. I added the optional key-value argument `max_tokens="2000"` to `generate` and got a full SVG, which looks essentially the same as Simon's.
+
+Incidentally, `generate` printed the following when it finished:
+
+```
+Prompt: 52 tokens, 37.576 tokens-per-sec
+Generation: 723 tokens, 7.735 tokens-per-sec
+Peak memory: 40.039 GB
+```
+
+Note the peak memory. Also, I didn't need a full 2000 tokens, apparently.
+
+
 
