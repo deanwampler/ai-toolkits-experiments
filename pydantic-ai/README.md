@@ -145,6 +145,8 @@ The Windy City is Chicago, Illinois, USA. It's known for its vibrant culture, ic
 Usage(requests=1, request_tokens=18, response_tokens=34, total_tokens=52, details=None)
 ```
 
+Note, I also tried using `result_type=None`, but still got the validation error.
+
 However, `granite3-dense:8b` worked.
 
 ```shell
