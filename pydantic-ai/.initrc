@@ -1,0 +1,4 @@
+#export PYDANTIC_AI_MODEL='openai:gpt-4o'
+export PYDANTIC_AI_MODEL='ollama:granite3-moe:3b'
+#export PYDANTIC_AI_MODEL='ollama:granite3-dense:8B'
+#export PYDANTIC_AI_MODEL='ollama:llama3.2:3B'
