@@ -1,5 +1,6 @@
 #!/usr/bin/env python
 # Adapted from https://kaitchup.substack.com/p/gguf-quantization-for-fast-and-memory?utm_source=substack&utm_medium=email
+# This script is mostly redundant with the "download" option in quantize.sh!
 
 from huggingface_hub import snapshot_download
 

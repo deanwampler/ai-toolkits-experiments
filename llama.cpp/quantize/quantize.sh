@@ -1,8 +1,12 @@
 #!/usr/bin/env zsh
 # Adapted from https://kaitchup.substack.com/p/gguf-quantization-for-fast-and-memory?utm_source=substack&utm_medium=email
 
-LLAMA_CPP_REPO=$(realpath ../llama.cpp)
-DEFAULT_MODEL_NAME="Qwen/Qwen1.5-1.8B" 
+LLAMA_CPP_REPO_REL="../llama.cpp-git"
+LLAMA_CPP_REPO=$(realpath $LLAMA_CPP_REPO_REL)
+
+DEFAULT_MODEL_NAME="lmstudio-community/Llama-3.3-70B-Instruct-GGUF"
+#DEFAULT_MODEL_NAME="Qwen/Qwen1.5-1.8B" 
+
 # Allowed quantization formats (are there others?):
 ALLOWED_METHODS=('q2_k' 'q3_k_m' 'q4_0' 'q4_k_m' 'q5_0' 'q5_k_m' 'q6_k' 'q8_0')
 DEFAULT_METHODS=('q4_0')
@@ -23,16 +27,18 @@ where:
                     or separate with commas, e.g., "q2_k,q3_k_m"
                     Allowed values: ${ALLOWED_METHODS[@]}
                     Default values: ${DEFAULT_METHODS[@]}
+-r | --repo PATH    Use PATH as the location for the llama.cpp repo
+                    (Default: $LLAMA_CPP_REPO_REL)
 
 The commands to run can be in any order, but they are executed in the order show.
-If you don't specify a command, "download", "convert", and "quantize" are run.
+The default behavior if you don't specify a command is to execute "download", 
+"convert", and "quantize". I.e., the same as "all", but without "run".
 
 d | download        Download one or more models.
 c | convert         Convert models to GGUF format (Done automatically with "download")
 q | quantize        Quantize the downloaded models.
 r | run             Run an example chat with all the quantized models.
 a | all             Do all of the above.
-
 EOF
 }
 
@@ -78,6 +84,7 @@ let run=1
 let at_least_one=1
 model_name=
 format_methods=()
+repo_path="$LLAMA_CPP_REPO"
 while [[ $# -gt 0 ]]
 do
   case $1 in
@@ -91,6 +98,10 @@ do
     -m|--model)
       shift
       model_name=$1
+      ;;
+    -r|--repo)
+      shift
+      repo_path=$(realpath "$1")
       ;;
     -f|--format)
       shift
@@ -139,11 +150,12 @@ fi
 [[ ${#format_methods[@]} -gt 0 ]] || format_methods=(${DEFAULT_METHODS[@]})
 check_for_allowed_methods "${format_methods[@]}"
 
-[[ -d "$LLAMA_CPP_REPO" ]] || error "LLAMA_CPP_REPO directory not found: $LLAMA_CPP_REPO"
+[[ -d "$repo_path" ]] || error "Repo directory $repo_path not found: $repo_path"
 
 echo "$0:"
 echo "Model:     $model_name"
 echo "Formats:   ${format_methods[@]}"
+echo "Repo:      $repo_path"
 echo "download?  $(true_false $download)"
 echo "convert?   $(true_false $convert)"
 echo "quantize?  $(true_false $quantize)"
@@ -179,7 +191,7 @@ if [[ $convert -eq 0 ]]
 then
   echo "=== Converting model in $orig_model_dir to $gguf_model_path"
   $NOOP mkdir -p "$gguf_model_dir"
-  $NOOP python "$LLAMA_CPP_REPO/convert_hf_to_gguf.py" "$orig_model_dir" --outtype f16 --outfile "$gguf_model_path"
+  $NOOP python "$repo_path/convert_hf_to_gguf.py" "$orig_model_dir" --outtype f16 --outfile "$gguf_model_path"
   $NOOP ls -l "$gguf_model_path"
   [[ -n "$NOOP" ]] || [[ -d "$gguf_model_path" ]] || error "Failed to convert model to $gguf_model_path"
 fi
@@ -191,7 +203,7 @@ then
   do
     qtype_path=$(make_qtype_path $m)
     echo "=== Quantizing "$gguf_model_path" to $qtype_path using $m"
-    $NOOP "$LLAMA_CPP_REPO/llama-quantize" "$gguf_model_path" "$qtype_path" "$m"
+    $NOOP "$repo_path/llama-quantize" "$gguf_model_path" "$qtype_path" "$m"
   done
 fi
 
@@ -201,6 +213,6 @@ then
   do
     qtype_path=$(make_qtype_path $m)
     echo "=== Running $qtype_path:"
-    $NOOP "$LLAMA_CPP_REPO/llama-cli" -m "$qtype_path" -n 90 --repeat_penalty 1.0 --color -i -r "User:" -f "$LLAMA_CPP_REPO/prompts/chat-with-bob.txt"
+    $NOOP "$repo_path/llama-cli" -m "$qtype_path" -n 90 --repeat_penalty 1.0 --color -i -r "User:" -f "$repo_path/prompts/chat-with-bob.txt"
   done
 fi
