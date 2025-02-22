@@ -36,6 +36,9 @@ from pydantic_ai.messages import (
     UserPromptPart,
 )
 
+from pydantic_ai_examples.determine_model import determine_model
+
+
 # 'if-token-present' means nothing will be sent (and the example will work) if you don't have logfire configured
 logfire.configure(send_to_logfire='if-token-present')
 

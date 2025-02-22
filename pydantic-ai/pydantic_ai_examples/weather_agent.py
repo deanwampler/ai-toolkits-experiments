@@ -22,7 +22,7 @@ from httpx import AsyncClient
 
 from pydantic_ai import Agent, ModelRetry, RunContext
 
-from determine_model import determine_model
+from pydantic_ai_examples.determine_model import determine_model
 
 # 'if-token-present' means nothing will be sent (and the example will work) if you don't have logfire configured
 logfire.configure(send_to_logfire='if-token-present')

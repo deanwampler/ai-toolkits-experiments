@@ -15,7 +15,7 @@ def determine_model(default_model: str = None) -> str:
     This function also prints which model string it is returning.
     """
     if not default_model:
-        default_model = 'openai:gpt-4o'
+        default_model = 'openai:gpt-4o-mini'
     model = cast(KnownModelName, os.getenv('PYDANTIC_AI_MODEL', default_model))
     print(f'Using model: {model}')
     return model

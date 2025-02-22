@@ -8,7 +8,7 @@ import datetime
 from dataclasses import dataclass
 from typing import cast, Literal
 
-from determine_model import determine_model
+from pydantic_ai_examples.determine_model import determine_model
 
 import logfire
 from pydantic import BaseModel, Field

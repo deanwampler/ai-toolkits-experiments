@@ -4,7 +4,7 @@ I experimented with [`pydantic-ai`](https://github.com/pydantic/pydantic-ai/) pa
 
 ## Experiments
 
-I used `ollama` and adapted the [examples](https://github.com/pydantic/pydantic-ai/examples) to try using three models instead of `openai:gpt-4o`:
+I copied the Pydantic-AI [`examples`](https://github.com/pydantic/pydantic-ai/examples) to the [`pydantic_ai_examples`](./pydantic_ai_examples) folder here; see below for how. Then adapted them to use `ollama` and try using three models instead of `openai:gpt-4o`:
 
 * `ollama:granite3-moe:3b`
 * `ollama:granite3-dense:8B`
@@ -20,22 +20,29 @@ For convenience, I defined which model to use by defining a shell environment va
 
 (However, I do something more _dynamic_ below...)
 
-Because I needed to tweak the examples to not use OpenAI, I used this convenience command to copy them from the installed code (after pip installing the library; see below):
+After pip installing the library (see below) and because I needed to tweak the examples to not use OpenAI, I used the provided `pydantic_ai_examples` convenience module to copy the examples from the installed code:
 
 ```shell
-python -m pydantic_ai_examples --copy-to examples/
+python -m pydantic_ai_examples --copy-to pydantic_ai_examples/
 ```
+
+> **Note:** The Pydantic-AI repo encourages you to use `uv` to manage dependencies in a virtual environment and run commands. These commands are still in the comments in the examples files, e.g., 
+>
+> ```shell
+> uv run -m pydantic_ai_examples --copy-to pydantic_ai_examples/
+> ```
+
 
 Hence, the contents of the `examples` directory is the output of this command, with my additional edits, including the following:
 
-1. Define a helper function, `determine_model`, in a new file, `examples/determine_model.py`, that reads the environment variable and returns a string with the desired model or a default value.
-1. Modify most of the examples to import the function and use it to get the correct model, then pass the value to the `Agent` constructor, rather than hard-code the OpenAI model.
+1. Defined a helper function, `determine_model`, in a new file, `pydantic_ai_examples/determine_model.py`, that reads the environment variable and returns a string with the desired model or a default value.
+1. Modified most of the examples to import the function and use it to get the correct model, then pass the value to the `Agent` constructor, rather than hard-code the OpenAI model.
 
 > **TODO** Not all the examples successfully execute with all the models I tried. There is work to do to figure out how to make them work with different, smaller models, like the Granite and Llama models chosen. See notes below.
 
 ## References
 
-* Running the examples: https://ai.pydantic.dev/examples/#running-examples
+* Running the examples: https://ai.pydantic.dev/pydantic_ai_examples/#running-examples
 * Using `ollama`: 
 	* https://ai.pydantic.dev/models/#ollama
 	* https://github.com/pydantic/pydantic-ai/blob/main/docs/api/models/ollama.md
@@ -52,8 +59,16 @@ pip install 'pydantic-ai[openai]'   # necessary for Ollama, too.
 Next, as discussed above, I created local copies of the examples (which are also in the GitHub repo...):
 
 ```shell
-python -m pydantic_ai_examples --copy-to examples/
+python -m pydantic_ai_examples --copy-to pydantic_ai_examples/
 ```
+
+Or, if you use `uv`:
+
+```shell
+uv run -m pydantic_ai_examples --copy-to pydantic_ai_examples/
+```
+
+> **Note:** You could use a different `--copy-to` directory but then you would have to change all the `uv python -m ...` commands shown here and in script comments. Keeping the same directory names makes the example commands work the same from the library installation or when you use the copied directory.
 
 I then made the edits discussed above.
 
@@ -74,29 +89,29 @@ Then for each example I tried using the three models. Recall they are:
 So, for `ollama:granite3-moe:3b`, I used the following commands:
 
 ```shell
-ollama run granite3-moe:3b 
+> ollama run granite3-moe:3b 
+...
 # CTRL-D out of the CLI; the model will still be running.
-PYDANTIC_AI_MODEL=ollama:granite3-moe:3b python examples.<example>.py
-ollama stop granite3-moe:3b
+> PYDANTIC_AI_MODEL=ollama:granite3-moe:3b python -m pydantic_ai_examples.<example>
+...
+> ollama stop granite3-moe:3b
+...
 ```
+
+(As before, if using `uv`, replace `python` with `uv run` in the middle command.)
 
 Repeat for `granite3-dense:8b` and `llama3.2:3B`...
 
-> **NOTE:** If I were running the examples directly from the pip installed library, the command would be:
-> ```shell
-> PYDANTIC_AI_MODEL=ollama:granite3-moe:3b python -m pydantic_ai_examples.<example> 
-> ```
+In what follows, I'll just show the `python -m pydantic_ai_examples.<example>` command, omitting the `ollama` commands, for the examples I tried, and describe what happens with each model.
 
-In what follows, I'll just show the `python examples/<example>` command and .pydescribe what happens with each model.
+### `pydantic_ai_examples.pydantic_model`
 
-### `pydantic_model`
-
-(I.e., `examples/pydantic_model.py`)
+(I.e., the file: `pydantic_ai_examples/pydantic_model.py`)
 
 First I tried `granite3-moe:3b`:
 
 ```shell
-PYDANTIC_AI_MODEL=ollama:granite3-moe:3b python examples/pydantic_model.py
+PYDANTIC_AI_MODEL=ollama:granite3-moe:3b python -m pydantic_ai_examples.pydantic_model
 ```
 
 Unfortunately, I got type validation errors on the results (apparently, a common issue. See, for example, [this issue](https://github.com/pydantic/pydantic-ai/issues/200)).
@@ -111,24 +126,24 @@ Using model: ollama:granite3-moe:3b
 02:21:55.387   model request
 02:21:55.753   handle model response
 Traceback (most recent call last):
-  File "/Users/deanwampler/projects/ai-misc/ai-toolkits-experiments/pydantic-ai/examples/pydantic_model.py", line 27, in <module>
+  File "$HOME/ai-toolkits-experiments/pydantic-ai/pydantic_ai_examples/pydantic_model.py", line 27, in <module>
     result = agent.run_sync('The windy city in the US of A.')
              ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-  File "/opt/homebrew/Caskroom/miniforge/base/envs/pydantic-ai/lib/python3.11/site-packages/pydantic_ai/agent.py", line 334, in run_sync
+  File "/.../Caskroom/miniforge/base/envs/pydantic-ai/lib/python3.11/site-packages/pydantic_ai/agent.py", line 334, in run_sync
     return asyncio.get_event_loop().run_until_complete(
            ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-  File "/opt/homebrew/Caskroom/miniforge/base/envs/pydantic-ai/lib/python3.11/asyncio/base_events.py", line 654, in run_until_complete
+  File "/.../Caskroom/miniforge/base/envs/pydantic-ai/lib/python3.11/asyncio/base_events.py", line 654, in run_until_complete
     return future.result()
            ^^^^^^^^^^^^^^^
-  File "/opt/homebrew/Caskroom/miniforge/base/envs/pydantic-ai/lib/python3.11/site-packages/pydantic_ai/agent.py", line 267, in run
+  File "/.../Caskroom/miniforge/base/envs/pydantic-ai/lib/python3.11/site-packages/pydantic_ai/agent.py", line 267, in run
     final_result, tool_responses = await self._handle_model_response(model_response, run_context)
                                    ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-  File "/opt/homebrew/Caskroom/miniforge/base/envs/pydantic-ai/lib/python3.11/site-packages/pydantic_ai/agent.py", line 889, in _handle_model_response
+  File "/.../Caskroom/miniforge/base/envs/pydantic-ai/lib/python3.11/site-packages/pydantic_ai/agent.py", line 889, in _handle_model_response
     return await self._handle_text_response(text, run_context)
            ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-  File "/opt/homebrew/Caskroom/miniforge/base/envs/pydantic-ai/lib/python3.11/site-packages/pydantic_ai/agent.py", line 907, in _handle_text_response
+  File "/.../Caskroom/miniforge/base/envs/pydantic-ai/lib/python3.11/site-packages/pydantic_ai/agent.py", line 907, in _handle_text_response
     self._incr_result_retry(run_context)
-  File "/opt/homebrew/Caskroom/miniforge/base/envs/pydantic-ai/lib/python3.11/site-packages/pydantic_ai/agent.py", line 1082, in _incr_result_retry
+  File "/.../Caskroom/miniforge/base/envs/pydantic-ai/lib/python3.11/site-packages/pydantic_ai/agent.py", line 1082, in _incr_result_retry
     raise exceptions.UnexpectedModelBehavior(
 pydantic_ai.exceptions.UnexpectedModelBehavior: Exceeded maximum retries (1) for result validation
 ```
@@ -150,7 +165,7 @@ Note, I also tried using `result_type=None`, but still got the validation error.
 However, `granite3-dense:8b` worked.
 
 ```shell
-PYDANTIC_AI_MODEL=ollama:granite3-dense:8b python examples/pydantic_model.py
+PYDANTIC_AI_MODEL=ollama:granite3-dense:8b python -m pydantic_ai_examples.pydantic_model
 ```
 
 Output:
@@ -170,7 +185,7 @@ Usage(requests=1, request_tokens=85, response_tokens=19, total_tokens=104, detai
 Also, `llama3.2:3B` produced the expected result:
 
 ```shell
-PYDANTIC_AI_MODEL=ollama:llama3.2:3B python examples/pydantic_model.py
+PYDANTIC_AI_MODEL=ollama:llama3.2:3B python -m pydantic_ai_examples.pydantic_model
 ```
 
 ```
@@ -185,35 +200,37 @@ Usage(requests=1, request_tokens=173, response_tokens=23, total_tokens=196, deta
 
 ### `pydantic_ai_examples.bank_support`
 
+(I.e., the file: `pydantic_ai_examples/bank_support.py`)
+
 First I tried `granite3-moe:3b`, but it threw the different error than the validation error previously:
 
 ```shell
-PYDANTIC_AI_MODEL=ollama:granite3-moe:3b python examples/bank_support.py
+PYDANTIC_AI_MODEL=ollama:granite3-moe:3b python -m pydantic_ai_examples.bank_support
 ```
 
 ```
 Using model: ollama:granite3-moe:3b
-/Users/deanwampler/projects/ai-misc/ai-toolkits-experiments/pydantic-ai/examples/bank_support.py:80: LogfireNotConfiguredWarning: No logs or spans will be created until `logfire.configure()` has been called. Set the environment variable LOGFIRE_IGNORE_NO_CONFIG=1 or add ignore_no_config=true in pyproject.toml to suppress this warning.
+$HOME/ai-toolkits-experiments/pydantic-ai/pydantic_ai_examples/bank_support.py:80: LogfireNotConfiguredWarning: No logs or spans will be created until `logfire.configure()` has been called. Set the environment variable LOGFIRE_IGNORE_NO_CONFIG=1 or add ignore_no_config=true in pyproject.toml to suppress this warning.
   result = support_agent.run_sync('What is my balance?', deps=deps)
 Traceback (most recent call last):
-  File "/Users/deanwampler/projects/ai-misc/ai-toolkits-experiments/pydantic-ai/examples/bank_support.py", line 80, in <module>
+  File "$HOME/ai-toolkits-experiments/pydantic-ai/pydantic_ai_examples/bank_support.py", line 80, in <module>
     result = support_agent.run_sync('What is my balance?', deps=deps)
              ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-  File "/opt/homebrew/Caskroom/miniforge/base/envs/pydantic-ai/lib/python3.11/site-packages/pydantic_ai/agent.py", line 334, in run_sync
+  File "/.../Caskroom/miniforge/base/envs/pydantic-ai/lib/python3.11/site-packages/pydantic_ai/agent.py", line 334, in run_sync
     return asyncio.get_event_loop().run_until_complete(
            ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-  File "/opt/homebrew/Caskroom/miniforge/base/envs/pydantic-ai/lib/python3.11/asyncio/base_events.py", line 654, in run_until_complete
+  File "/.../Caskroom/miniforge/base/envs/pydantic-ai/lib/python3.11/asyncio/base_events.py", line 654, in run_until_complete
     return future.result()
            ^^^^^^^^^^^^^^^
-  File "/opt/homebrew/Caskroom/miniforge/base/envs/pydantic-ai/lib/python3.11/site-packages/pydantic_ai/agent.py", line 267, in run
+  File "/.../Caskroom/miniforge/base/envs/pydantic-ai/lib/python3.11/site-packages/pydantic_ai/agent.py", line 267, in run
     final_result, tool_responses = await self._handle_model_response(model_response, run_context)
                                    ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-  File "/opt/homebrew/Caskroom/miniforge/base/envs/pydantic-ai/lib/python3.11/site-packages/pydantic_ai/agent.py", line 889, in _handle_model_response
+  File "/.../Caskroom/miniforge/base/envs/pydantic-ai/lib/python3.11/site-packages/pydantic_ai/agent.py", line 889, in _handle_model_response
     return await self._handle_text_response(text, run_context)
            ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-  File "/opt/homebrew/Caskroom/miniforge/base/envs/pydantic-ai/lib/python3.11/site-packages/pydantic_ai/agent.py", line 907, in _handle_text_response
+  File "/.../Caskroom/miniforge/base/envs/pydantic-ai/lib/python3.11/site-packages/pydantic_ai/agent.py", line 907, in _handle_text_response
     self._incr_result_retry(run_context)
-  File "/opt/homebrew/Caskroom/miniforge/base/envs/pydantic-ai/lib/python3.11/site-packages/pydantic_ai/agent.py", line 1082, in _incr_result_retry
+  File "/.../Caskroom/miniforge/base/envs/pydantic-ai/lib/python3.11/site-packages/pydantic_ai/agent.py", line 1082, in _incr_result_retry
     raise exceptions.UnexpectedModelBehavior(
 pydantic_ai.exceptions.UnexpectedModelBehavior: Exceeded maximum retries (1) for result validation
 ```
@@ -221,34 +238,34 @@ pydantic_ai.exceptions.UnexpectedModelBehavior: Exceeded maximum retries (1) for
 Trying `granite3-dense:8b`:
 
 ```shell
-PYDANTIC_AI_MODEL=ollama:granite3-dense:8b python examples/bank_support.py
+PYDANTIC_AI_MODEL=ollama:granite3-dense:8b python -m pydantic_ai_examples.bank_support
 ```
 
 But it threw a validation error:
 
 ```
 Using model: ollama:granite3-dense:8b
-/Users/deanwampler/projects/ai-misc/ai-toolkits-experiments/pydantic-ai/examples/bank_support.py:80: LogfireNotConfiguredWarning: No logs or spans will be created until `logfire.configure()` has been called. Set the environment variable LOGFIRE_IGNORE_NO_CONFIG=1 or add ignore_no_config=true in pyproject.toml to suppress this warning.
+$HOME/ai-toolkits-experiments/pydantic-ai/pydantic_ai_examples/bank_support.py:80: LogfireNotConfiguredWarning: No logs or spans will be created until `logfire.configure()` has been called. Set the environment variable LOGFIRE_IGNORE_NO_CONFIG=1 or add ignore_no_config=true in pyproject.toml to suppress this warning.
   result = support_agent.run_sync('What is my balance?', deps=deps)
 Traceback (most recent call last):
-  File "/Users/deanwampler/projects/ai-misc/ai-toolkits-experiments/pydantic-ai/examples/bank_support.py", line 80, in <module>
+  File "$HOME/ai-toolkits-experiments/pydantic-ai/pydantic_ai_examples/bank_support.py", line 80, in <module>
     result = support_agent.run_sync('What is my balance?', deps=deps)
              ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-  File "/opt/homebrew/Caskroom/miniforge/base/envs/pydantic-ai/lib/python3.11/site-packages/pydantic_ai/agent.py", line 334, in run_sync
+  File "/.../Caskroom/miniforge/base/envs/pydantic-ai/lib/python3.11/site-packages/pydantic_ai/agent.py", line 334, in run_sync
     return asyncio.get_event_loop().run_until_complete(
            ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-  File "/opt/homebrew/Caskroom/miniforge/base/envs/pydantic-ai/lib/python3.11/asyncio/base_events.py", line 654, in run_until_complete
+  File "/.../Caskroom/miniforge/base/envs/pydantic-ai/lib/python3.11/asyncio/base_events.py", line 654, in run_until_complete
     return future.result()
            ^^^^^^^^^^^^^^^
-  File "/opt/homebrew/Caskroom/miniforge/base/envs/pydantic-ai/lib/python3.11/site-packages/pydantic_ai/agent.py", line 267, in run
+  File "/.../Caskroom/miniforge/base/envs/pydantic-ai/lib/python3.11/site-packages/pydantic_ai/agent.py", line 267, in run
     final_result, tool_responses = await self._handle_model_response(model_response, run_context)
                                    ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-  File "/opt/homebrew/Caskroom/miniforge/base/envs/pydantic-ai/lib/python3.11/site-packages/pydantic_ai/agent.py", line 889, in _handle_model_response
+  File "/.../Caskroom/miniforge/base/envs/pydantic-ai/lib/python3.11/site-packages/pydantic_ai/agent.py", line 889, in _handle_model_response
     return await self._handle_text_response(text, run_context)
            ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-  File "/opt/homebrew/Caskroom/miniforge/base/envs/pydantic-ai/lib/python3.11/site-packages/pydantic_ai/agent.py", line 907, in _handle_text_response
+  File "/.../Caskroom/miniforge/base/envs/pydantic-ai/lib/python3.11/site-packages/pydantic_ai/agent.py", line 907, in _handle_text_response
     self._incr_result_retry(run_context)
-  File "/opt/homebrew/Caskroom/miniforge/base/envs/pydantic-ai/lib/python3.11/site-packages/pydantic_ai/agent.py", line 1082, in _incr_result_retry
+  File "/.../Caskroom/miniforge/base/envs/pydantic-ai/lib/python3.11/site-packages/pydantic_ai/agent.py", line 1082, in _incr_result_retry
     raise exceptions.UnexpectedModelBehavior(
 pydantic_ai.exceptions.UnexpectedModelBehavior: Exceeded maximum retries (1) for result validation
 ```
@@ -257,7 +274,7 @@ pydantic_ai.exceptions.UnexpectedModelBehavior: Exceeded maximum retries (1) for
 Trying `llama3.2:3b`:
 
 ```shell
-PYDANTIC_AI_MODEL=ollama:llama3.2:3b python examples/bank_support.py
+PYDANTIC_AI_MODEL=ollama:llama3.2:3b python -m pydantic_ai_examples.bank_support
 ```
 
 It threw the same validation error.
@@ -272,3 +289,65 @@ Both `granite3-dense:8B` and `llama3.2:3B` worked for this simple task, but stru
 
 TODO.
 
+## Can We Use Ollama's Structured Output?
+
+An IBM colleague pointed out that Ollama has support for structured output, as described [here](https://ollama.com/blog/structured-outputs). The examples assume you are querying models directly through the `chat` interface. How can this feature be used with Pydantic-AI?
+
+Looking through the Pydantic-AI source code, I see that when Ollama models are used, the implementation for OpenAI is used, because they are API compatible.
+
+Using `pydantic_ai_examples.pydantic_model`, I tried passing a JSON string as the query to the agent, but it did not cause the result to be properly formatted:
+
+```python
+class MyModel(BaseModel):
+    city: str
+    country: str
+
+model = determine_model()
+agent = Agent(model, result_type=MyModel)  
+user_prompt = 'The windy city in the US of A.'
+full_prompt = """{
+  "model": "%s",
+  "messages": [{"role": "user", "content": "%s"}],
+  "stream": false,
+  "format": {
+    "type": "object",
+    "properties": {
+      "city": {
+        "type": "string"
+      },
+      "country": {
+        "type": "string"
+      },
+    },
+    "required": [
+      "city",
+      "country", 
+    ]
+  }
+}""" % (model, user_prompt)
+
+result = agent.run_sync(full_prompt)
+print(result.data)
+print(result.usage())
+```
+
+I get the same thing both times with `granite3-moe:3b`:
+
+```
+16:55:37.408   preparing model and tools run_step=1
+16:55:37.409   model request
+16:55:38.894   handle model response
+16:55:38.895   preparing model and tools run_step=2
+16:55:38.895   model request
+16:55:40.945   handle model response
+Traceback (most recent call last):
+  File "<frozen runpy>", line 198, in _run_module_as_main
+  File "<frozen runpy>", line 88, in _run_code
+  File "/Users/deanwampler/projects/ai-misc/ai-toolkits-experiments/pydantic-ai/pydantic_ai_examples/pydantic_model.py", line 50, in <module>
+    result = agent.run_sync(full_prompt)
+...
+```
+
+Following the Ollama docs, I also attempted to use `result_type=MyModel.model_json_schema()`, but that appears to cause a type error.
+
+It may be that you a custom `OllamaModel` type is needed to leverage Ollama's structured output.

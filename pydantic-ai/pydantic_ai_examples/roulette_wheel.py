@@ -12,7 +12,7 @@ from typing import Literal
 
 from pydantic_ai import Agent, RunContext
 
-from determine_model import determine_model
+from pydantic_ai_examples.determine_model import determine_model
 
 # Define the dependencies class
 @dataclass

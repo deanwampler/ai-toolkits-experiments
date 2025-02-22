@@ -11,7 +11,7 @@ from pydantic import BaseModel, Field
 
 from pydantic_ai import Agent, RunContext
 
-from determine_model import determine_model
+from pydantic_ai_examples.determine_model import determine_model
 
 class DatabaseConn:
     """This is a fake database for example purposes.
