@@ -2,7 +2,7 @@
 
 My experiments with different Gen AI tool kits, especially for local execution on systems like Apple Silicon, but also application patterns like RAG and agents. There isn't much rhyme or reason to this repo otherwise... :grin:
 
-This repo uses [git submodules](https://git-scm.com/book/en/v2/Git-Tools-Submodules) of other repos, such as the toolkits themselves. Hence, to get those submdules, you can pass `--recurse-submodules` when you clone this repo or initialize them separately.
+This repo uses [git submodules](https://git-scm.com/book/en/v2/Git-Tools-Submodules) of other repos, such as the toolkits themselves for _some_ of the exercises. Hence, to get those submdules, you can pass `--recurse-submodules` when you clone this repo or initialize them separately.
 
 All at once:
 
