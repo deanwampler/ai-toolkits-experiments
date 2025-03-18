@@ -49,7 +49,14 @@ Hence, the contents of the `examples` directory is the output of this command, w
 
 ## Setup Steps
 
-Setup:
+First, I created a conda environmment:
+
+```shell
+conda create -n pydantic-ai -y python=3.11 pip
+conda activate pydantic-ai
+```
+
+Then I installed `pydantic-ai`:
 
 ```shell
 pip install 'pydantic-ai[examples]'
