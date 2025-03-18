@@ -12,10 +12,10 @@ I copied the Pydantic-AI [`examples`](https://github.com/pydantic/pydantic-ai/ex
 
 As you might expect, each model gave different results and sometimes one worked better than another, as discussed below.
 
-For convenience, I defined which model to use by defining a shell environment variable, `PYDANTIC_AI_MODEL`, in the `.initrc` file in this directory, which is sourced as follows:
+For convenience, I defined which model to use by defining a shell environment variable, `PYDANTIC_AI_MODEL`, in the `.setup.sh` file in this directory, which is sourced as follows:
 
 ```shell
-. initrc
+. setup.sh
 ```
 
 (However, I do something more _dynamic_ below...)
