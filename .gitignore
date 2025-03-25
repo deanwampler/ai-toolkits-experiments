@@ -18,3 +18,4 @@ __pycache__
 
 # Project specific "ignores":
 llama.cpp/quantize/original_model/
+.DS_Store
