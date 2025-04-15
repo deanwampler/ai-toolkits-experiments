@@ -11,11 +11,23 @@ export OLLAMA_SAFETY_MODEL="llama-guard3:1b"
 export SAFETY_MODEL="meta-llama/Llama-Guard-3-1B"
 # export SAFETY_MODEL=$OLLAMA_SAFETY_MODEL
 
-setup_error() {
-	echo "$SETUP_SCRIPT: ERROR: $@"
+must_use() {
+	echo "$SETUP_SCRIPT: ERROR: Must use the llama-stack conda environment:"
+	echo "$SETUP_SCRIPT: ERROR: conda activate llama-stack"
 	exit 1
 }
 
-[[ $CONDA_PREFIX =~ /envs/llama-stack ]] || setup_error "Wrong conda environment! $CONDA_DEFAULT_ENV (path: $CONDA_PREFIX)"
+check_conda_env() {
+	if [[ -z $CONDA_DEFAULT_ENV ]]
+	then
+		must_use
+	elif [[ $CONDA_DEFAULT_ENV != llama-stack ]]
+	then
+		echo "$SETUP_SCRIPT: ERROR: Wrong conda environment! $CONDA_DEFAULT_ENV (path: $CONDA_PREFIX)"
+		must_use
+	fi
+}
+
+check_conda_env
 
 export PATH_TO_YAMLS="$CONDA_PREFIX/lib/python3.10/site-packages/llama_stack/templates/ollama"

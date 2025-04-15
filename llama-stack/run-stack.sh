@@ -20,7 +20,7 @@ error() {
 }
 
 which_yaml="run.yaml"
-safety_args=
+safety_args=()
 while [[ $# -gt 0 ]]
 do
 	case $1 in
@@ -29,8 +29,13 @@ do
 			exit 0
 			;;
 		-s|--safety)
-			# Handle repeated -s flags!
-			[[ -z $safety ]] && safety="--env SAFETY_MODEL=$SAFETY_MODEL"
+			# Ignore repeated -s flags!
+			if [[ ${#safety_args[@]} -gt 0 ]]
+			then
+				safety_args+=("--env" "SAFETY_MODEL=$SAFETY_MODEL")
+			else
+				echo "Ignoring repeated --safety flag."
+			fi
 			which_yaml="run-with-safety.yaml"
 			;;
 		*)
@@ -43,12 +48,12 @@ done
 
 echo running: llama stack run $PATH_TO_YAMLS/$which_yaml \
   --port $LLAMA_STACK_PORT \
+  --env OLLAMA_URL=http://localhost:11434 \
   --env INFERENCE_MODEL=$INFERENCE_MODEL \
-  --env SAFETY_MODEL=$SAFETY_MODEL \
-  --env OLLAMA_URL=http://localhost:11434
+  ${safety_args[@]}
 
 [[ -z $NOOP ]] && llama stack run $PATH_TO_YAMLS/$which_yaml \
   --port $LLAMA_STACK_PORT \
+  --env OLLAMA_URL=http://localhost:11434 \
   --env INFERENCE_MODEL=$INFERENCE_MODEL \
-  --env SAFETY_MODEL=$SAFETY_MODEL \
-  --env OLLAMA_URL=http://localhost:11434
+  ${safety_args[@]}

@@ -15,7 +15,7 @@ conda activate llama-stack
 
 However, it appears that when I ran the recommended `uv` setup command discussed below, it used Python 3.10.
 
-Next, I created a `./.setup.sh` script to set the environment variables:
+Next, I created a `./.setup.sh` script to set the environment variables, verify the conda environment is working, etc.:
 
 ```shell
 SETUP_SCRIPT=$0
@@ -30,18 +30,12 @@ export INFERENCE_MODEL=$OLLAMA_INFERENCE_MODEL
 export OLLAMA_SAFETY_MODEL="llama-guard3:1b"
 export SAFETY_MODEL="meta-llama/Llama-Guard-3-1B"
 # export SAFETY_MODEL=$OLLAMA_SAFETY_MODEL
-
-setup_error() {
-	echo "$SETUP_SCRIPT: ERROR: $@"
-	exit 1
-}
-
-[[ $CONDA_PREFIX =~ /envs/llama-stack ]] || setup_error "Wrong conda environment! $CONDA_DEFAULT_ENV (path: $CONDA_PREFIX)"
-
-export PATH_TO_YAMLS="$CONDA_PREFIX/lib/python3.10/site-packages/llama_stack/templates/ollama"
+...
 ```
 
-The commented and used definitions of the `*_MODEL` variables and the use of `PATH_TO_YAMLS` are explained below, when they are used.
+This script is used by the `run-model.sh` and `run-stack.sh` scripts. You don't use it by itself.
+
+The different definitions of the `*_MODEL` variables, some commented out and others used, as well as the use of `PATH_TO_YAMLS`, are explained below.
 
 I then defined a script `run-model.sh` to run the inference and optionally the safety models in Ollama. See `run-model.sh --help` for instructions on how to use it.
 
@@ -71,7 +65,7 @@ However, I found them in `$CONDA_PREFIX/lib/python3.10/site-packages/llama_stack
 
 Also, note how `INFERENCE_MODEL` and `SAFETY_MODEL` are defined in `./.setup.sh` and the commented-out lines. The instructions say that `INFERENCE_MODEL="meta-llama/Llama-3.2-3B"` should be correct (for the model I'm using), but I got an error that only the Ollama name, `llama-guard3:1b` was available. That wasn't the case for the safety model, where the Llama name shown worked as specified.
 
-With these changes, my `run-stack.sh -s` script worked. (The `-s` option has it use both the inference and safety models. Try `run-shack.sh --help`.) It then waited for some script to use the stack.
+With these changes, my `run-stack.sh --safety` script worked. (The `--safety` option tells it to use both the inference and safety models. Try `run-shack.sh --help`.) It then waited for some other processes to use the stack.
 
 With the runtime environment working using Ollama, I next visited the [Quick Start](https://llama-stack.readthedocs.io/en/latest/getting_started/index.html#run-inference-with-python-sdk) page and tried the inference example shown.
 
@@ -80,7 +74,7 @@ With the runtime environment working using Ollama, I next visited the [Quick Sta
 python inference.py > inference.log
 ```
 
-(Some details were changed in the copy of `inference.log` in this repo to protect the innocent...)
+(Some details were changed in the copy of `inference.log` you will find in this repo to protect the innocent...)
 
 It worked, printing out a lot YAML information, ending with this:
 
