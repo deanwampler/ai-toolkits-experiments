@@ -57,3 +57,7 @@ echo running: llama stack run $PATH_TO_YAMLS/$which_yaml \
   --env OLLAMA_URL=http://localhost:11434 \
   --env INFERENCE_MODEL=$INFERENCE_MODEL \
   ${safety_args[@]}
+
+# Alternative from https://llama-stack.readthedocs.io/en/latest/getting_started/detailed_tutorial.html#step-2-run-llama-stack
+# INFERENCE_MODEL=llama3.2:3B llama stack build \
+#   --template ollama --image-type conda  --image-name llama3-3b-conda --run

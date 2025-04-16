@@ -1,24 +1,7 @@
 import os
 import sys
 
-
-def create_http_client():
-    from llama_stack_client import LlamaStackClient
-
-    return LlamaStackClient(
-        base_url=f"http://localhost:{os.environ['LLAMA_STACK_PORT']}"
-    )
-
-
-def create_library_client(template="ollama"):
-    from llama_stack import LlamaStackAsLibraryClient
-
-    client = LlamaStackAsLibraryClient(template)
-    if not client.initialize():
-        print("llama stack not built properly")
-        sys.exit(1)
-    return client
-
+from common import create_library_client
 
 client = (
     create_library_client()

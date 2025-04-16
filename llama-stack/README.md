@@ -112,4 +112,88 @@ inference> [knowledge_search(query="torchtune memory optimization")]"
 
 Unfortunately, the Quick Start guide doesn't tell you what the output should be, so I assume both runs succeeded, because no errors were mentioned and the output seems reasonable...
 
+## The CLI Client
+
+(April 15, 2025)
+
+https://llama-stack.readthedocs.io/en/latest/getting_started/detailed_tutorial.html#step-3-run-client-cli
+
+```shell
+$ llama-stack-client -h
+Usage: llama-stack-client [OPTIONS] COMMAND [ARGS]...
+
+  Welcome to the llama-stack-client CLI - a command-line interface for
+  interacting with Llama Stack
+
+Options:
+  -h, --help       Show this message and exit.
+  --version        Show the version and exit.
+  --endpoint TEXT  Llama Stack distribution endpoint
+  --api-key TEXT   Llama Stack distribution API key
+  --config TEXT    Path to config file
+
+Commands:
+  configure          Configure Llama Stack Client CLI.
+  datasets           Manage datasets.
+  eval               Run evaluation tasks.
+  eval_tasks         Manage evaluation tasks.
+  inference          Inference (chat).
+  inspect            Inspect server configuration.
+  models             Manage GenAI models.
+  post_training      Post-training.
+  providers          Manage API providers.
+  scoring_functions  Manage scoring functions.
+  shields            Manage safety shield services.
+  toolgroups         Manage available tool groups.
+  vector_dbs         Manage vector databases.
+
+$ llama-stack-client configure --endpoint http://localhost:8321 --api-key none
+Done! You can now use the Llama Stack Client CLI with endpoint http://localhost:8321
+```
+
+But some subsequent commands didn't work:
+
+```shell
+$ llama-stack-client shields list
+╭────────────────────────────────╮
+│ Failed to list shields         │
+│                                │
+│ Error Type: APIConnectionError │
+│ Details: Connection error.     │
+╰────────────────────────────────╯
+
+$ llama-stack-client models list
+╭────────────────────────────────╮
+│ Failed to list models          │
+│                                │
+│ Error Type: APIConnectionError │
+│ Details: Connection error.     │
+╰────────────────────────────────╯
+```
+
+I decided to try the [getting started](https://llama-stack.readthedocs.io/en/latest/getting_started/detailed_tutorial.html) instructions again, using the conda options.
+
+I got the same connection errors afterwards, but I noticed that I can't ping any of `localhost`, `127.0.0.1` or the actual IP address of my laptop.
+
+## Looking at Safety Support
+
+(April 15, 2025)
+
+https://llama-stack.readthedocs.io/en/latest/building_applications/safety.html#safety-guardrails
+
+Let's try the same code shown, also in `register-safety-shield.py`, which has corrections to make it actually work!!
+
+```python
+# Register a safety shield
+shield_id = "content_safety"
+client.shields.register(shield_id=shield_id, provider_shield_id="llama-guard-basic")
+
+# Run content through shield
+response = client.safety.run_shield(
+    shield_id=shield_id, messages=[{"role": "user", "content": "User message here"}]
+)
+
+if response.violation:
+    print(f"Safety violation detected: {response.violation.user_message}")
+```
 
