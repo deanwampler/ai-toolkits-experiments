@@ -10,6 +10,7 @@ Usage: $0 [-h|--help] [-s|--safety]
 Where
 -h | --help          Print this message and exit.
 -s | --safety        Also running the Llama Stack Safety / Shield APIs (with model $SAFETY_MODEL)
+-u | --uv            When you are running everything using "uv" instead of "venv" or "conda".
 EOF
 }
 
@@ -21,6 +22,7 @@ error() {
 
 which_yaml="run.yaml"
 safety_args=()
+uv_args=()
 while [[ $# -gt 0 ]]
 do
 	case $1 in
@@ -38,6 +40,9 @@ do
 			fi
 			which_yaml="run-with-safety.yaml"
 			;;
+		-u|--uv)
+			uv_args=("uv" "run" "--with" "llama-stack")
+			;;
 		*)
 			error "Unrecognized argument: $1"
 			exit 1
@@ -46,13 +51,13 @@ do
 	shift
 done
 
-echo running: llama stack run $PATH_TO_YAMLS/$which_yaml \
+echo running: "${uv_args[@]}" llama stack run $PATH_TO_YAMLS/$which_yaml \
   --port $LLAMA_STACK_PORT \
   --env OLLAMA_URL=http://localhost:11434 \
   --env INFERENCE_MODEL=$INFERENCE_MODEL \
   ${safety_args[@]}
 
-[[ -z $NOOP ]] && llama stack run $PATH_TO_YAMLS/$which_yaml \
+[[ -z $NOOP ]] && "${uv_args[@]}" llama stack run $PATH_TO_YAMLS/$which_yaml \
   --port $LLAMA_STACK_PORT \
   --env OLLAMA_URL=http://localhost:11434 \
   --env INFERENCE_MODEL=$INFERENCE_MODEL \

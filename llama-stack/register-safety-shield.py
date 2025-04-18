@@ -11,10 +11,12 @@ allowed_shield_ids = {
     'Llama-Guard-3-8B': 'meta-llama/Llama-Guard-3-8B', 
     'meta-llama/Llama-Guard-3-8B': 'meta-llama/Llama-Guard-3-8B', 
     'Llama-Guard-3-1B': 'meta-llama/Llama-Guard-3-1B', 
+    # 'llama-guard3:1b': 'llama-guard3:1b', 
     'meta-llama/Llama-Guard-3-1B': 'meta-llama/Llama-Guard-3-1B', 
     'Llama-Guard-3-11B-Vision': 'meta-llama/Llama-Guard-3-11B-Vision', 
     'meta-llama/Llama-Guard-3-11B-Vision': 'meta-llama/Llama-Guard-3-11B-Vision'
 }
+#provider_shield_id = 'llama-guard3:1b' #'Llama-Guard-3-1B'
 provider_shield_id = 'Llama-Guard-3-1B'
 shield_id = "content_safety"
 

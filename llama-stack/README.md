@@ -171,9 +171,92 @@ $ llama-stack-client models list
 ╰────────────────────────────────╯
 ```
 
+## Restarting
+
+(April 15, 2025)
+
 I decided to try the [getting started](https://llama-stack.readthedocs.io/en/latest/getting_started/detailed_tutorial.html) instructions again, using the conda options.
 
 I got the same connection errors afterwards, but I noticed that I can't ping any of `localhost`, `127.0.0.1` or the actual IP address of my laptop.
+
+So, I switched to my home Mac.
+
+```shell
+$ conda env create -f llama-stack.yaml
+$ conda activate llama-stack
+$ INFERENCE_MODEL=llama3.2:3b llama stack build --template ollama --image-type conda  --image-name llama3-3b-conda --run 
+```
+
+But the last command fails because `llama` isn't installed already. So, I'll switch to the [Quickstart](https://llama-stack.readthedocs.io/en/latest/getting_started/index.html) instructions that use `uv` instead for this step (also available on the detailed tutorial page...).
+
+```shell
+INFERENCE_MODEL=llama3.2:3b uv run --with llama-stack llama stack build --template ollama --image-type venv --run
+```
+
+But the model is actually `llama3.2:3B`:
+
+```shell
+INFERENCE_MODEL=llama3.2:3B uv run --with llama-stack llama stack build --template ollama --image-type venv --run
+```
+
+Since we're on the quick start page, let's try the demo shown. See `demo_script.py` in this directory.
+
+```shell
+$ uv run --with llama-stack-client demo_script.py
+
+Installed 32 packages in 137ms
+rag_tool> Ingesting document: https://www.paulgraham.com/greatwork.html
+prompt> How do you do great work?
+inference> I'm designed to provide accurate and helpful information, and I strive to do so in the following ways:
+
+1. **Knowledge Base**: I have been trained on a massive dataset of text from various sources, including books, articles, research papers, and websites. This training enables me to access a vast amount of knowledge on a wide range of topics.
+2. **Algorithms and Models**: My developers use advanced algorithms and machine learning models to analyze and process the data I've been trained on. These models help me identify patterns, relationships, and context, which I can then use to generate responses.
+3. **Continuous Learning**: I learn from the interactions I have with users like you. The more conversations I have, the more accurate and informative my responses become.
+4. **Attention to Detail**: I'm designed to be precise and accurate in my responses. I strive to provide clear, concise, and relevant information that addresses your questions or concerns.
+5. **Adaptability**: I can adapt to different topics, styles, and formats. Whether you ask me a question, provide a prompt, or engage in a conversation, I'll do my best to respond accordingly.
+
+To achieve great work, I also rely on:
+
+1. **User Feedback**: Your input helps me refine my performance and improve the quality of my responses.
+2. **Quality Control**: My developers continuously monitor and evaluate my performance to ensure I meet high standards of accuracy, relevance, and helpfulness.
+3. **Technical Maintenance**: Regular updates, maintenance, and improvements help keep my systems running smoothly and efficiently.
+
+By combining these factors, I aim to provide you with accurate, informative, and helpful responses that meet your needs and exceed your expectations!
+```
+
+Looks good. 
+
+Back to the CLI commands:
+
+```shell
+yes | conda create -n stack-client python=3.10
+conda activate stack-client
+pip install llama-stack-client
+llama-stack-client configure --endpoint http://localhost:8321 --api-key none
+```
+
+Try the CLI commands that failed before:
+
+```shell
+$ llama-stack-client models list
+
+Available Models
+
+┏━━━━━━━━━━━━━━━━┳━━━━━━━━━━━━━━━━━━━━━━━━┳━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━┳━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━┳━━━━━━━━━━━━━━━━━┓
+┃ model_type     ┃ identifier             ┃ provider_resource_id         ┃ metadata                                 ┃ provider_id     ┃
+┡━━━━━━━━━━━━━━━━╇━━━━━━━━━━━━━━━━━━━━━━━━╇━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━╇━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━╇━━━━━━━━━━━━━━━━━┩
+│ llm            │ llama3.2:3B            │ llama3.2:3B                  │                                          │ ollama          │
+├────────────────┼────────────────────────┼──────────────────────────────┼──────────────────────────────────────────┼─────────────────┤
+│ embedding      │ all-MiniLM-L6-v2       │ all-minilm:latest            │ {'embedding_dimension': 384.0}           │ ollama          │
+└────────────────┴────────────────────────┴──────────────────────────────┴──────────────────────────────────────────┴─────────────────┘
+
+Total models: 2
+
+$ llama-stack-client shields list
+(nothing...)
+```
+
+Success!! So, it may be the network configuration of my work laptop is incompatible with this CLI!!
 
 ## Looking at Safety Support
 
@@ -181,19 +264,97 @@ I got the same connection errors afterwards, but I noticed that I can't ping any
 
 https://llama-stack.readthedocs.io/en/latest/building_applications/safety.html#safety-guardrails
 
-Let's try the same code shown, also in `register-safety-shield.py`, which has corrections to make it actually work!!
+Let's try the code shown in this section, captured in `register-safety-shield.py` with lots of corrections to make it work!!
 
-```python
-# Register a safety shield
-shield_id = "content_safety"
-client.shields.register(shield_id=shield_id, provider_shield_id="llama-guard-basic")
-
-# Run content through shield
-response = client.safety.run_shield(
-    shield_id=shield_id, messages=[{"role": "user", "content": "User message here"}]
-)
-
-if response.violation:
-    print(f"Safety violation detected: {response.violation.user_message}")
+```shell
+$ python register-safety-shield.py
+Traceback (most recent call last):
+  File "/Users/deanwampler/projects/ai/ai-toolkits-experiments/llama-stack/register-safety-shield.py", line 6, in <module>
+    create_library_client()
+  File "/Users/deanwampler/projects/ai/ai-toolkits-experiments/llama-stack/common.py", line 18, in create_library_client
+    from llama_stack import LlamaStackAsLibraryClient
+ModuleNotFoundError: No module named 'llama_stack'
 ```
 
+Hmm. Using `uv` earlier probably means it's not installed in the Conda environment. So, let's try this:
+
+```shell
+$ INFERENCE_MODEL=llama3.2:3B uv run --with llama-stack python register-safety-shield.py
+
+No module named 'aiosqlite'
+Using llama-stack as a library requires installing dependencies depending on the template (providers) you choose.
+
+Please run:
+
+llama stack build --template ollama --image-type venv
+
+
+Traceback (most recent call last):
+...
+```
+
+Okay...
+
+```shell
+❯ llama stack build --template ollama --image-type venv
+
+zsh: command not found: llama
+```
+
+How about this?
+
+```shell
+❯ uv run --with llama-stack llama stack build --template ollama --image-type venv
+
+...
+Build Successful!
+```
+
+Trying again with the the register script:
+
+```shell
+$ INFERENCE_MODEL=llama3.2:3B uv run --with llama-stack python register-safety-shield.py
+
+...
+ValueError: Model 'meta-llama/Llama-Guard-3-1B' not found
+```
+
+The real name appears to be `llama-guard3:1b`, at least in `ollama`, but the API hard-codes the allowed values. See the `allowed_shield_ids` in `register-safety-shield.py`, which was taken from an error message of the allowed ids.
+
+I'll come back to this issue later.
+
+## Retrying the Examples from the Detailed Tutorial
+
+```shell
+$ INFERENCE_MODEL=llama3.2:3B uv run --with llama-stack python inference.py
+
+...
+--- Available models: ---
+- all-MiniLM-L6-v2
+- llama3.2:3B
+
+Lines of code descend
+Logic's gentle, guiding hand
+Beauty in the byte
+```
+
+```shell
+$ INFERENCE_MODEL=llama3.2:3B uv run --with llama-stack python rag.py
+
+...
+User> How to optimize memory usage in torchtune? use the knowledge_search tool to get information.
+inference> To optimize memory usage in PyTorch Tune, you can try the following:
+...
+```
+
+Note that previously when I had everything installed in the conda environment, it was sufficient to run just `python rag.py`, etc.
+
+## Trying the Agents Example
+
+https://llama-stack.readthedocs.io/en/latest/building_applications/agent.html
+
+See `agent-example.py`, which fixes some bugs in the example.
+
+```shell
+INFERENCE_MODEL=llama3.2:3B uv run --with llama-stack python agent-example.py
+```
