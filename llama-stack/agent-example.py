@@ -92,7 +92,7 @@ def pp_response(response):
         for res in response:
             pprint(res)
     else:
-        pprint(res)
+        pprint(response)
 
 def log_response(response):
     if args.verbose:
