@@ -1,5 +1,7 @@
 # README for Llama Stack Experiments
 
+> **NOTE:** This is a long file of _lab notes_. Not everything said at the beginning applied by the time I got to the end!
+
 Following these instructions for use with Ollama:
 
 https://llama-stack.readthedocs.io/en/latest/distributions/self_hosted_distro/ollama.html
@@ -199,6 +201,8 @@ But the model is actually `llama3.2:3B`:
 INFERENCE_MODEL=llama3.2:3B uv run --with llama-stack llama stack build --template ollama --image-type venv --run
 ```
 
+> **NOTE:** The quick start and detailed tutorial pages should be consistent about how to run the stack!
+
 Since we're on the quick start page, let's try the demo shown. See `demo_script.py` in this directory.
 
 ```shell
@@ -357,4 +361,41 @@ See `agent-example.py`, which fixes some bugs in the example.
 
 ```shell
 INFERENCE_MODEL=llama3.2:3B uv run --with llama-stack python agent-example.py
+```
+
+## New Trials...
+
+(April 21, 2025)
+
+Picking up again on Monday, I ran into new problems which _may_ be due to the discovery that I needed to upgraded `miniforge`, which appeared to wipe out my existing environments. So, first, I recreated the `llama-stack` conda environment:
+
+```shell
+cd [root of this repo]
+conda env create --name llama-stack --file llama-stack/llama-stack-conda.yaml
+conda activate llama-stack
+```
+
+Then I attempted to run the same command I had used previously above:
+
+```shell
+$ INFERENCE_MODEL=llama3.2:3B uv run --with llama-stack llama stack build --template ollama --image-type venv --run
+
+Error building stack: Please specify an image name when building a venv image
+```
+
+Okay. Something I missed has changed. Since I've been using `conda`, let's try the `conda` alternative.
+
+```shell
+INFERENCE_MODEL=llama3.2:3B llama stack build --template ollama --image-type conda  --image-name llama3-3b-conda --run
+```
+
+> **NOTE:** As before, you have to use `llama3.2:3B`, not `llama3.2:3b`, as documented.
+
+Of course, this creates yet another `conda` environment, `llama3-3b-conda`..., but it appears to work.
+
+Now the [detailed tutorial](https://llama-stack.readthedocs.io/en/latest/getting_started/detailed_tutorial.html) recommends one of these commands for running the stack with `venv` or `conda`:
+
+```shell
+INFERENCE_MODEL=llama3.2:3b llama stack build --template ollama --image-type venv --run  # venv
+INFERENCE_MODEL=llama3.2:3b llama stack build --template ollama --image-type conda  --image-name llama3-3b-conda --run  # conda
 ```
