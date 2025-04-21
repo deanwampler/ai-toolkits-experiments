@@ -1,7 +1,10 @@
 from llama_stack_client import Agent, AgentEventLogger, RAGDocument, LlamaStackClient
 
 vector_db_id = "my_demo_vector_db"
-client = LlamaStackClient(base_url="http://localhost:8321")
+port = 5001
+print(f"""Connecting to the llama stack client: http://localhost:{port}.
+If this fails, make sure the port value is correct!!""")
+client = LlamaStackClient(base_url=f"http://localhost:{port}")
 
 models = client.models.list()
 

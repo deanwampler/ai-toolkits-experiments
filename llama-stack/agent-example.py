@@ -96,13 +96,15 @@ def pp_response(response):
 
 def log_response(response):
     if args.verbose:
-        # print(f" Skipping logging of the 'response'.")
+        print(f" Skipping logging of the 'response'.")
         # It seems that the logging API should be smarter about handling different types of input.
-        if isinstance(response, GeneratorType):
-            for res in response:
-                do_log(res)
-        else:
-            do_log(response)
+        # The following _only_ works when the --streaming option is used. Otherwise, it crashes 
+        # in the call above to AgentEventLogger().log(response)
+        # if isinstance(response, GeneratorType):
+        #     for res in response:
+        #         do_log(res)
+        # else:
+        #     do_log(response)
 
 print(f"Chat example using {streaming_msg} responses with your prompts:")
 print("\nEnter your prompts. When finished, enter a blank line or ^D.")
@@ -111,8 +113,7 @@ while True:
     try:
         user_prompt = input("> ")
         if user_prompt == "":
-            if args.verbose:
-                print("Finished!")
+            print("Finished!")
             break
         response = agent.create_turn(
             session_id=session_id,

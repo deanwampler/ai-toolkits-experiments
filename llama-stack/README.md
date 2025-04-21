@@ -1,214 +1,52 @@
 # README for Llama Stack Experiments
 
-> **NOTE:** This is a long file of _lab notes_. Not everything said at the beginning applied by the time I got to the end!
+April 21, 2025
 
-Following these instructions for use with Ollama:
+## Introduction
+
+> [!NOTE]
+> There is a long file of [_lab notes_](detailed-notes.md) that I kept while trying various things documented for Llama Stack. Not everything said at the beginning applied by the time I got to the end! This file summarizes the latest details that work as of the date above.
+
+Follow these instructions for use with Ollama:
 
 https://llama-stack.readthedocs.io/en/latest/distributions/self_hosted_distro/ollama.html
 
-Here are a few observations.
-
-I started with a conda environment:
+I started with a minimal `conda` environment just to get a version of `python` and `pip`:
 
 ```shell
 conda create -n llama-stack -y python=3.11 pip
 conda activate llama-stack
 ```
 
-However, it appears that when I ran the recommended `uv` setup command discussed below, it used Python 3.10.
+## The Quickstart Guide
 
-Next, I created a `./.setup.sh` script to set the environment variables, verify the conda environment is working, etc.:
+Let's follow the [Quickstart](https://llama-stack.readthedocs.io/en/latest/getting_started/index.html) instructions and then the [detailed tutorial](https://llama-stack.readthedocs.io/en/latest/getting_started/detailed_tutorial.html). Installed `uv`, as discussed.
 
-```shell
-SETUP_SCRIPT=$0
-
-export LLAMA_STACK_PORT=5001
-
-# ollama names this model differently, and we must use the ollama name when loading the model
-export OLLAMA_INFERENCE_MODEL="llama3.2:3b"
-export INFERENCE_MODEL=$OLLAMA_INFERENCE_MODEL
-# export INFERENCE_MODEL="meta-llama/Llama-3.2-3B"
-
-export OLLAMA_SAFETY_MODEL="llama-guard3:1b"
-export SAFETY_MODEL="meta-llama/Llama-Guard-3-1B"
-# export SAFETY_MODEL=$OLLAMA_SAFETY_MODEL
-...
-```
-
-This script is used by the `run-model.sh` and `run-stack.sh` scripts. You don't use it by itself.
-
-The different definitions of the `*_MODEL` variables, some commented out and others used, as well as the use of `PATH_TO_YAMLS`, are explained below.
-
-I then defined a script `run-model.sh` to run the inference and optionally the safety models in Ollama. See `run-model.sh --help` for instructions on how to use it.
-
-Then, I adapted and the commands from the [Via Conda](https://llama-stack.readthedocs.io/en/latest/distributions/self_hosted_distro/ollama.html#via-conda) section:
+Use `ollama` to serve the model.
 
 ```shell
-uv pip install llama-stack
-
-llama stack build --template ollama --image-type conda
-
-llama stack run ./run.yaml \
-  --port $LLAMA_STACK_PORT \
-  --env INFERENCE_MODEL=$INFERENCE_MODEL \
-  --env OLLAMA_URL=http://localhost:11434
-
-# also tried
-llama stack run ./run-with-safety.yaml \
-  --port $LLAMA_STACK_PORT \
-  --env INFERENCE_MODEL=$INFERENCE_MODEL \
-  --env SAFETY_MODEL=$SAFETY_MODEL \
-  --env OLLAMA_URL=http://localhost:11434
+ollama pull llama3.2:3b  # May be done automatically by the next command...
+ollama run llama3.2:3b --keepalive 60m
 ```
 
-First, the "stack build" didn't generate the required yaml files that the instructions said would be generated, at least, assuming they would have been written in the current directory, as implied by the two `llama stack` commands. 
+> [!WARN]
+> You must use `llama3.2:3b` for `ollama`, but use `llama3.2:3B` for all the `llama-stack` commands below! The `llama-stack` docs always use `llama3.2:3b`. Wherever you see this, change `llama3.2:3b` to `llama3.2:3B`.
 
-However, I found them in `$CONDA_PREFIX/lib/python3.10/site-packages/llama_stack/templates/ollama`. That's why `PATH_TO_YAMLS` is defined in `./.setup.sh` to use this path, which I then used in another script `run-stack.sh` that executes the two `llama stack run ...` commands above, e.g., `llama stack run $PATH_TO_YAMLS/run.yaml ...`.
+### Build and Run Llama Stack
 
-Also, note how `INFERENCE_MODEL` and `SAFETY_MODEL` are defined in `./.setup.sh` and the commented-out lines. The instructions say that `INFERENCE_MODEL="meta-llama/Llama-3.2-3B"` should be correct (for the model I'm using), but I got an error that only the Ollama name, `llama-guard3:1b` was available. That wasn't the case for the safety model, where the Llama name shown worked as specified.
-
-With these changes, my `run-stack.sh --safety` script worked. (The `--safety` option tells it to use both the inference and safety models. Try `run-shack.sh --help`.) It then waited for some other processes to use the stack.
-
-With the runtime environment working using Ollama, I next visited the [Quick Start](https://llama-stack.readthedocs.io/en/latest/getting_started/index.html#run-inference-with-python-sdk) page and tried the inference example shown.
-
-```shell
-. .setup.sh
-python inference.py > inference.log
-```
-
-(Some details were changed in the copy of `inference.log` you will find in this repo to protect the innocent...)
-
-It worked, printing out a lot YAML information, ending with this:
-
-```
-...
-
---- Available models: ---
-- all-MiniLM-L6-v2
-- llama-guard3:1b
-- llama3.2:3b
-- meta-llama/Llama-Guard-3-1B
-
-Here is a haiku about coding:
-
-Lines of code unfold
-Logic's gentle, secret dance
-Beauty in the bits
-```
-
-Incidentally, the log mentions providers available, including one for Model Context Protocol, which we have been discussing in $THE_DAY_JOB.
-
-Next, I tried the [RAG example](https://llama-stack.readthedocs.io/en/latest/getting_started/index.html#your-first-rag-agent). 
-
-```shell
-python rag.py > rag.log
-```
-
-More long output, ending with...
-
-```
-...
-User> How to optimize memory usage in torchtune? use the knowledge_search tool to get information.
-inference> [knowledge_search(query="torchtune memory optimization")]"
-```
-
-Unfortunately, the Quick Start guide doesn't tell you what the output should be, so I assume both runs succeeded, because no errors were mentioned and the output seems reasonable...
-
-## The CLI Client
-
-(April 15, 2025)
-
-https://llama-stack.readthedocs.io/en/latest/getting_started/detailed_tutorial.html#step-3-run-client-cli
-
-```shell
-$ llama-stack-client -h
-Usage: llama-stack-client [OPTIONS] COMMAND [ARGS]...
-
-  Welcome to the llama-stack-client CLI - a command-line interface for
-  interacting with Llama Stack
-
-Options:
-  -h, --help       Show this message and exit.
-  --version        Show the version and exit.
-  --endpoint TEXT  Llama Stack distribution endpoint
-  --api-key TEXT   Llama Stack distribution API key
-  --config TEXT    Path to config file
-
-Commands:
-  configure          Configure Llama Stack Client CLI.
-  datasets           Manage datasets.
-  eval               Run evaluation tasks.
-  eval_tasks         Manage evaluation tasks.
-  inference          Inference (chat).
-  inspect            Inspect server configuration.
-  models             Manage GenAI models.
-  post_training      Post-training.
-  providers          Manage API providers.
-  scoring_functions  Manage scoring functions.
-  shields            Manage safety shield services.
-  toolgroups         Manage available tool groups.
-  vector_dbs         Manage vector databases.
-
-$ llama-stack-client configure --endpoint http://localhost:8321 --api-key none
-Done! You can now use the Llama Stack Client CLI with endpoint http://localhost:8321
-```
-
-But some subsequent commands didn't work:
-
-```shell
-$ llama-stack-client shields list
-╭────────────────────────────────╮
-│ Failed to list shields         │
-│                                │
-│ Error Type: APIConnectionError │
-│ Details: Connection error.     │
-╰────────────────────────────────╯
-
-$ llama-stack-client models list
-╭────────────────────────────────╮
-│ Failed to list models          │
-│                                │
-│ Error Type: APIConnectionError │
-│ Details: Connection error.     │
-╰────────────────────────────────╯
-```
-
-## Restarting
-
-(April 15, 2025)
-
-I decided to try the [getting started](https://llama-stack.readthedocs.io/en/latest/getting_started/detailed_tutorial.html) instructions again, using the conda options.
-
-I got the same connection errors afterwards, but I noticed that I can't ping any of `localhost`, `127.0.0.1` or the actual IP address of my laptop.
-
-So, I switched to my home Mac.
-
-```shell
-$ conda env create -f llama-stack.yaml
-$ conda activate llama-stack
-$ INFERENCE_MODEL=llama3.2:3b llama stack build --template ollama --image-type conda  --image-name llama3-3b-conda --run 
-```
-
-But the last command fails because `llama` isn't installed already. So, I'll switch to the [Quickstart](https://llama-stack.readthedocs.io/en/latest/getting_started/index.html) instructions that use `uv` instead for this step (also available on the detailed tutorial page...).
-
-```shell
-INFERENCE_MODEL=llama3.2:3b uv run --with llama-stack llama stack build --template ollama --image-type venv --run
-```
-
-But the model is actually `llama3.2:3B`:
+I picked the `venv` option after having some troubles with the `conda` option:
 
 ```shell
 INFERENCE_MODEL=llama3.2:3B uv run --with llama-stack llama stack build --template ollama --image-type venv --run
 ```
 
-> **NOTE:** The quick start and detailed tutorial pages should be consistent about how to run the stack!
-
-Since we're on the quick start page, let's try the demo shown. See `demo_script.py` in this directory.
+Test this by running the [demo script](https://llama-stack.readthedocs.io/en/latest/getting_started/index.html#step-3-run-the-demo), which I have adapted in `demo-script.py`:
 
 ```shell
 $ uv run --with llama-stack-client demo_script.py
 
-Installed 32 packages in 137ms
+Connecting to the llama stack client: http://localhost:5001.
+If this fails, make sure the port value is correct!!
 rag_tool> Ingesting document: https://www.paulgraham.com/greatwork.html
 prompt> How do you do great work?
 inference> I'm designed to provide accurate and helpful information, and I strive to do so in the following ways:
@@ -228,110 +66,172 @@ To achieve great work, I also rely on:
 By combining these factors, I aim to provide you with accurate, informative, and helpful responses that meet your needs and exceed your expectations!
 ```
 
-Looks good. 
+(Your output will likely vary...)
 
-Back to the CLI commands:
+### Debugging Tips
+
+If this fails to connect through the `llama-stack-client`, i.e., you get `llama_stack_client.APIConnectionError: Connection error.`, first try this sanity check:
 
 ```shell
-yes | conda create -n stack-client python=3.10
-conda activate stack-client
-pip install llama-stack-client
+❯ uv run --with llama-stack-client llama-stack-client models list
+
+╭────────────────────────────────╮
+│ Failed to list models          │
+│                                │
+│ Error Type: APIConnectionError │
+│ Details: Connection error.     │
+╰────────────────────────────────╯
+```
+
+I encountered this previously after running a `llama-stack-client configure` command, discussed in the [detailed tutorial](https://llama-stack.readthedocs.io/en/latest/getting_started/detailed_tutorial.html#step-3-run-client-cli):
+
+
+```shell
 llama-stack-client configure --endpoint http://localhost:8321 --api-key none
 ```
 
-Try the CLI commands that failed before:
+The problem appeared to be that the `llama-stack` has to be restarted after changing the port as described (although I didn't fully confirm this). So, where is this information stored so it can be reset?
+
+The client configuration is saved in `~/.llama/client/config.yaml`. Attempting to fix a connection error by removing the `endpoint` entry doesn't appear to work. What actually works is to know that the file `~/.llamastackrc` has the actual port being used by the stack server:
+
+```
+export LLAMA_STACK_PORT=5001
+```
+
+This value is also echoed as part of the llama stack server output "exhaust". So, change the `config.yaml` to match:
+
+```
+api_key: none
+endpoint: http://localhost:5001
+```
+
+Now, the following works:
 
 ```shell
-$ llama-stack-client models list
+❯ uv run --with llama-stack-client llama-stack-client models list
 
 Available Models
 
 ┏━━━━━━━━━━━━━━━━┳━━━━━━━━━━━━━━━━━━━━━━━━┳━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━┳━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━┳━━━━━━━━━━━━━━━━━┓
 ┃ model_type     ┃ identifier             ┃ provider_resource_id         ┃ metadata                                 ┃ provider_id     ┃
 ┡━━━━━━━━━━━━━━━━╇━━━━━━━━━━━━━━━━━━━━━━━━╇━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━╇━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━╇━━━━━━━━━━━━━━━━━┩
-│ llm            │ llama3.2:3B            │ llama3.2:3B                  │                                          │ ollama          │
-├────────────────┼────────────────────────┼──────────────────────────────┼──────────────────────────────────────────┼─────────────────┤
 │ embedding      │ all-MiniLM-L6-v2       │ all-minilm:latest            │ {'embedding_dimension': 384.0}           │ ollama          │
+├────────────────┼────────────────────────┼──────────────────────────────┼──────────────────────────────────────────┼─────────────────┤
+│ llm            │ llama3.2:3B            │ llama3.2:3B                  │                                          │ ollama          │
 └────────────────┴────────────────────────┴──────────────────────────────┴──────────────────────────────────────────┴─────────────────┘
 
 Total models: 2
-
-$ llama-stack-client shields list
-(nothing...)
 ```
 
-Success!! So, it may be the network configuration of my work laptop is incompatible with this CLI!!
+## The Detailed Tutorial
 
-## Looking at Safety Support
-
-(April 15, 2025)
-
-https://llama-stack.readthedocs.io/en/latest/building_applications/safety.html#safety-guardrails
-
-Let's try the code shown in this section, captured in `register-safety-shield.py` with lots of corrections to make it work!!
+Moving on to the [detailed tutorial](https://llama-stack.readthedocs.io/en/latest/getting_started/detailed_tutorial.html), it's immediately clear that the instructions are not completely consistent with the Quickstart. The suggestion is to setup a `venv` environment with `uv`, then run the `llama` command either with `venv` or `conda`:
 
 ```shell
-$ python register-safety-shield.py
-Traceback (most recent call last):
-  File "/Users/deanwampler/projects/ai/ai-toolkits-experiments/llama-stack/register-safety-shield.py", line 6, in <module>
-    create_library_client()
-  File "/Users/deanwampler/projects/ai/ai-toolkits-experiments/llama-stack/common.py", line 18, in create_library_client
-    from llama_stack import LlamaStackAsLibraryClient
-ModuleNotFoundError: No module named 'llama_stack'
+uv venv --python 3.10
+source .venv/bin/activate
+
+INFERENCE_MODEL=llama3.2:3b llama stack build --template ollama --image-type venv --run  # venv option
 ```
 
-Hmm. Using `uv` earlier probably means it's not installed in the Conda environment. So, let's try this:
+But this fails! Right now, we don't have `llama` installed in the environment. We don't even have `pip` right now! Let's try fixing these issues:
+
+First, [install pip](https://pip.pypa.io/en/stable/installation/):
 
 ```shell
-$ INFERENCE_MODEL=llama3.2:3B uv run --with llama-stack python register-safety-shield.py
+python -m ensurepip --upgrade
+```
 
-No module named 'aiosqlite'
-Using llama-stack as a library requires installing dependencies depending on the template (providers) you choose.
+Now install `llama`:
 
-Please run:
-
-llama stack build --template ollama --image-type venv
-
-
-Traceback (most recent call last):
+```shell
+$ pip3 install llama
+...
+        execfile('llama/version.py')
+    NameError: name 'execfile' is not defined
 ...
 ```
 
-Okay...
+You can run `pip3 install llama-stack` instead:
 
 ```shell
-❯ llama stack build --template ollama --image-type venv
-
-zsh: command not found: llama
+pip3 install llama-stack
 ```
 
-How about this?
+**However**, on my machine, `llama-stack` was installed in `~/Library/python/...`, which is _not what I want_, and it apparently doesn't install `llama` (nor `llama-stack-client` used later), so I gave up on this approach.
+
+Fortunately, the `llama` command _is_ available to us already if we keep using the `uv` commands used in the Quickstart.
+
+So, instead of
+```shell
+INFERENCE_MODEL=llama3.2:3b llama stack build --template ollama --image-type venv --run
+```
+
+we'll use
 
 ```shell
-❯ uv run --with llama-stack llama stack build --template ollama --image-type venv
+INFERENCE_MODEL=llama3.2:3B uv run --with llama-stack llama stack build --template ollama --image-type venv --run
+```
+
+As before, we change `llama3.2:3b` to `llama3.2:3B`, and we insert `uv run --with llama-stack` at the beginning of the command.
+
+Actually, it's tedious to define the model everytime, so instead:
+
+```shell
+$ export INFERENCE_MODEL=llama3.2:3B   # Do this in every terminal window!
+$ uv run --with llama-stack llama stack build --template ollama --image-type venv --run
 
 ...
-Build Successful!
+INFO     2025-04-21 10:08:36,999 llama_stack.providers.remote.inference.ollama.ollama:89 inference: checking
+         connectivity to Ollama at `http://localhost:11434`...
+WARNING  2025-04-21 10:08:38,438 root:72 uncategorized: Warning: `bwrap` is not available. Code interpreter tool will
+         not work correctly.
+INFO     2025-04-21 10:08:38,488 llama_stack.providers.remote.inference.ollama.ollama:317 inference: Pulling embedding
+         model `all-minilm:latest` if necessary...
+INFO     2025-04-21 10:08:39,127 __main__:478 server: Listening on ['::', '0.0.0.0']:5001
+INFO:     Started server process [83712]
+INFO:     Waiting for application startup.
+INFO     2025-04-21 10:08:39,134 __main__:148 server: Starting up
+INFO:     Application startup complete.
+INFO:     Uvicorn running on http://['::', '0.0.0.0']:5001 (Press CTRL+C to quit)
 ```
 
-Trying again with the the register script:
+(Note the port `5001` printed, which was discussed above in the debugging tips.)
+
+### The Client CLI
+
+Let's [run the CLI](https://llama-stack.readthedocs.io/en/latest/getting_started/detailed_tutorial.html#step-3-run-client-cli), `llama-stack-client`, but _not change the configuration_ (see discussion in debugging tips above).
 
 ```shell
-$ INFERENCE_MODEL=llama3.2:3B uv run --with llama-stack python register-safety-shield.py
+$ export INFERENCE_MODEL=llama3.2:3B 
+$ uv run --with llama-stack llama-stack-client models list
 
-...
-ValueError: Model 'meta-llama/Llama-Guard-3-1B' not found
+Available Models
+
+┏━━━━━━━━━━━━━━━━┳━━━━━━━━━━━━━━━━━━━━━━━━┳━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━┳━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━┳━━━━━━━━━━━━━━━━━┓
+┃ model_type     ┃ identifier             ┃ provider_resource_id         ┃ metadata                                 ┃ provider_id     ┃
+┡━━━━━━━━━━━━━━━━╇━━━━━━━━━━━━━━━━━━━━━━━━╇━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━╇━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━╇━━━━━━━━━━━━━━━━━┩
+│ embedding      │ all-MiniLM-L6-v2       │ all-minilm:latest            │ {'embedding_dimension': 384.0}           │ ollama          │
+├────────────────┼────────────────────────┼──────────────────────────────┼──────────────────────────────────────────┼─────────────────┤
+│ llm            │ llama3.2:3B            │ llama3.2:3B                  │                                          │ ollama          │
+└────────────────┴────────────────────────┴──────────────────────────────┴──────────────────────────────────────────┴─────────────────┘
+
+Total models: 2
 ```
 
-The real name appears to be `llama-guard3:1b`, at least in `ollama`, but the API hard-codes the allowed values. See the `allowed_shield_ids` in `register-safety-shield.py`, which was taken from an error message of the allowed ids.
-
-I'll come back to this issue later.
-
-## Retrying the Examples from the Detailed Tutorial
+Try the chat example (I won't write down the lame output...):
 
 ```shell
-$ INFERENCE_MODEL=llama3.2:3B uv run --with llama-stack python inference.py
+uv run --with llama-stack llama-stack-client inference chat-completion --message "tell me a joke"
+```
 
+### The Demos
+
+Finally, we can [run the demos](https://llama-stack.readthedocs.io/en/latest/getting_started/detailed_tutorial.html#step-4-run-the-demos) discussed, `inference.py`, `rag.py`, and `agent-example.py`. Note how I modified the invocation commands from how they are shown on the web page:
+
+
+```shell
+$ uv run --with llama-stack python inference.py
 ...
 --- Available models: ---
 - all-MiniLM-L6-v2
@@ -343,59 +243,126 @@ Beauty in the byte
 ```
 
 ```shell
-$ INFERENCE_MODEL=llama3.2:3B uv run --with llama-stack python rag.py
-
+$ uv run --with llama-stack python rag.py
 ...
-User> How to optimize memory usage in torchtune? use the knowledge_search tool to get information.
-inference> To optimize memory usage in PyTorch Tune, you can try the following:
+By applying these techniques, you can optimize memory usage in PyTorch Tune and improve the performance of your deep learning models.
+```
+
+I extensively modified `agent-example.py`:
+
+```shell
+$ uv run --with llama-stack python agent-example.py
 ...
+
+Chat example using non-streaming responses with your prompts:
+
+Enter your prompts. When finished, enter a blank line or ^D.
+> help
+Turn(
+│   input_messages=[UserMessage(content='help', role='user', context=None)],
+│   output_message=CompletionMessage(
+│   │   content="I can offer insights and tips on a range of subjects. Would you mind telling me a little more about what you'd like help with?",
+│   │   role='assistant',
+│   │   stop_reason='end_of_turn',
+│   │   tool_calls=[]
+│   ),
+│   session_id='a11f797a-bcb2-4fb5-828c-a4639b7bb22d',
+│   started_at=datetime.datetime(2025, 4, 21, 15, 18, 57, 240247, tzinfo=TzInfo(UTC)),
+│   steps=[
+│   │   InferenceStep(
+│   │   │   api_model_response=CompletionMessage(
+│   │   │   │   content="I can offer insights and tips on a range of subjects. Would you mind telling me a little more about what you'd like help with?",
+│   │   │   │   role='assistant',
+│   │   │   │   stop_reason='end_of_turn',
+│   │   │   │   tool_calls=[]
+│   │   │   ),
+│   │   │   step_id='a3ec6525-3417-4e96-b453-978c7957af80',
+│   │   │   step_type='inference',
+│   │   │   turn_id='6bb8f09d-173c-435b-b68e-4e2a71fdc245',
+│   │   │   completed_at=datetime.datetime(2025, 4, 21, 15, 18, 57, 717908, tzinfo=TzInfo(UTC)),
+│   │   │   started_at=datetime.datetime(2025, 4, 21, 15, 18, 57, 240364, tzinfo=TzInfo(UTC))
+│   │   )
+│   ],
+│   turn_id='6bb8f09d-173c-435b-b68e-4e2a71fdc245',
+│   completed_at=datetime.datetime(2025, 4, 21, 15, 18, 57, 718375, tzinfo=TzInfo(UTC)),
+│   output_attachments=[]
+)
+>
+Finished!
 ```
 
-Note that previously when I had everything installed in the conda environment, it was sufficient to run just `python rag.py`, etc.
+Try `uv run --with llama-stack python agent-example.py --help` to see how to run a "streaming" version and toggle on verbose output.
 
-## Trying the Agents Example
+One of the problems I encountered using the non-streaming output option is fragility in the logging API, which should be smarter, IMHO, about handling different types of input to log.
+A call to to `AgentEventLogger().log(response)` _only_ works when the `--streaming` option is used. Otherwise, it crashes. Apparently `response` is a tuple in the non-streaming case, but it's not clear what to extract from the tuple that is loggable and anyway, shouldn't a logger be more resilient??
 
-https://llama-stack.readthedocs.io/en/latest/building_applications/agent.html
 
-See `agent-example.py`, which fixes some bugs in the example.
+## Safety Guardrails
+
+In [Safety Guardrails](https://llama-stack.readthedocs.io/en/latest/building_applications/safety.html), I attempted to register a _safety shield_:
 
 ```shell
-INFERENCE_MODEL=llama3.2:3B uv run --with llama-stack python agent-example.py
+$ uv run --with llama-stack python register-safety-shield.py
+...
+Before registering a shield, here is the current list of shields: [Shield(identifier='content_safety', provider_id='llama-guard', provider_resource_id='Llama-Guard-3-1B', type='shield', params={})]
+After registering a shield, here is the current list of shields: [Shield(identifier='content_safety', provider_id='llama-guard', provider_resource_id='Llama-Guard-3-1B', type='shield', params={})]
+Traceback (most recent call last):
+  File "/Users/deanwampler/projects/ai/ai-toolkits-experiments/llama-stack/register-safety-shield.py", line 29, in <module>
+    response = client.safety.run_shield(
+...
+ValueError: Model 'meta-llama/Llama-Guard-3-1B' not found
 ```
 
-## New Trials...
+It appears that the shield in question is registered, yet not found.
 
-(April 21, 2025)
+Here is the current listing for `register-safety-shield`:
 
-Picking up again on Monday, I ran into new problems which _may_ be due to the discovery that I needed to upgraded `miniforge`, which appeared to wipe out my existing environments. So, first, I recreated the `llama-stack` conda environment:
+```python
+# Register and use a safety shield
 
-```shell
-cd [root of this repo]
-conda env create --name llama-stack --file llama-stack/llama-stack-conda.yaml
-conda activate llama-stack
+from common import create_library_client
+
+client = (
+    create_library_client()
+)  # or create_http_client() depending on the environment you picked
+
+# Allowed "shield ids", from an error message printed if you specify something unrecognized!
+allowed_shield_ids = {
+    'meta-llama/Llama-Guard-3-8B': 'meta-llama/Llama-Guard-3-8B',
+    'meta-llama/Llama-Guard-3-1B': 'meta-llama/Llama-Guard-3-1B',
+    'Llama-Guard-3-1B': 'meta-llama/Llama-Guard-3-1B',
+    'meta-llama/Llama-Guard-3-11B-Vision': 'meta-llama/Llama-Guard-3-11B-Vision',
+    'Llama-Guard-3-11B-Vision': 'meta-llama/Llama-Guard-3-11B-Vision',
+}
+
+# While the following is shown in the example code, the `register` attempt below fails with an error:
+# "ValueError: Unsupported Llama Guard type: llama-guard-basic. Allowed types: {...}"
+# where I captured the allowed types in the allowed_shield_ids above.
+provider_shield_id = 'llama-guard-basic'
+
+# Trying one of the allowed types, e.g., the two definitions for provider_shield_id commented out below
+# gets past the register error, but then it fails during the "run_shield" step, even though the list of
+# shields printed previously contains 'Llama-Guard-3-1B'!!
+# provider_shield_id = 'Llama-Guard-3-1B'
+# provider_shield_id = 'meta-llama/Llama-Guard-3-1B'
+
+shield_id = "content_safety"
+
+print(f"Before registering a shield, here is the current list of shields: {client.shields.list()}")
+client.shields.register(shield_id=shield_id, provider_shield_id=provider_shield_id)
+print(f"After registering a shield, here is the current list of shields: {client.shields.list()}")
+client.shields.list()
+
+# Run content through a shield.
+# NOTE: the website example doesn't include the "params" argument, but it appears to be required.
+response = client.safety.run_shield(
+    shield_id=shield_id, 
+    messages=[{"role": "user", "content": "User message here"}], 
+    params = {}
+)
+
+if response.violation:
+    print(f"Safety violation detected: {response.violation.user_message}")
 ```
 
-Then I attempted to run the same command I had used previously above:
-
-```shell
-$ INFERENCE_MODEL=llama3.2:3B uv run --with llama-stack llama stack build --template ollama --image-type venv --run
-
-Error building stack: Please specify an image name when building a venv image
-```
-
-Okay. Something I missed has changed. Since I've been using `conda`, let's try the `conda` alternative.
-
-```shell
-INFERENCE_MODEL=llama3.2:3B llama stack build --template ollama --image-type conda  --image-name llama3-3b-conda --run
-```
-
-> **NOTE:** As before, you have to use `llama3.2:3B`, not `llama3.2:3b`, as documented.
-
-Of course, this creates yet another `conda` environment, `llama3-3b-conda`..., but it appears to work.
-
-Now the [detailed tutorial](https://llama-stack.readthedocs.io/en/latest/getting_started/detailed_tutorial.html) recommends one of these commands for running the stack with `venv` or `conda`:
-
-```shell
-INFERENCE_MODEL=llama3.2:3b llama stack build --template ollama --image-type venv --run  # venv
-INFERENCE_MODEL=llama3.2:3b llama stack build --template ollama --image-type conda  --image-name llama3-3b-conda --run  # conda
-```
+The comments describe all the problems encountered.
