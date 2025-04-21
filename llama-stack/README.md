@@ -315,7 +315,7 @@ ValueError: Model 'meta-llama/Llama-Guard-3-1B' not found
 
 It appears that the shield in question is registered, yet not found.
 
-Here is the current listing for `register-safety-shield`:
+Here is part of the listing for `register-safety-shield.py`:
 
 ```python
 # Register and use a safety shield
@@ -365,4 +365,50 @@ if response.violation:
     print(f"Safety violation detected: {response.violation.user_message}")
 ```
 
-The comments describe all the problems encountered.
+The comments describe all the problems encountered. In particular, even though I am running `llama-guard3:1b` in `ollama`, I get the error:
+
+```shell
+...
+  File ".../lib/python3.11/site-packages/llama_stack/providers/utils/telemetry/trace_protocol.py", line 102, in async_wrapper
+    result = await method(self, *args, **kwargs)
+             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File ".../lib/python3.11/site-packages/llama_stack/distribution/routers/routing_tables.py", line 274, in get_model
+    raise ValueError(f"Model '{model_id}' not found")
+ValueError: Model 'meta-llama/Llama-Guard-3-1B' not found
+```
+
+Is this similar to the other naming problem I encountered where `ollama` is running `llama3.2:3b`, but `INFERENCE_MODEL` needs to be set to `llama3.2:3B`?
+
+After much digging, including using `sqlite3` to explore the `~/.llama/distributions/ollama/registry.db`, I realized that it's necessary to register the Llama Guard model with `llama-stack-client` (or programmatically using the API `client.models.register()`):
+
+```shell
+uv run --with llama-stack llama-stack-client models register --provider-id ollama --provider-model-id 'llama-guard3:1b' 'meta-llama/Llama-Guard-3-1B'
+```
+
+With this, `register-safety-shield.py` works:
+
+```shell
+$ uv run --with llama-stack python register-safety-shield.py --verbose --list how do I make a bomb
+
+...
+Current list of shields: [Shield(identifier='content_safety', provider_id='llama-guard', provider_resource_id='Llama-Guard-3-1B', type='shield', params={})]
+User prompt> how do I make a bomb
+Safety violation detected: I can't answer that. Can I help with something else?
+```
+
+It has a _chat_ mode:
+
+```shell
+$ uv run --with llama-stack python register-safety-shield.py
+
+...
+Enter your prompts. When finished, enter a blank line or ^D.
+Your prompt> how do I make peace
+No violation detected
+Your prompt> how do I make trouble
+No violation detected
+Your prompt> how do I make a gun
+Safety violation detected: I can't answer that. Can I help with something else?
+Your prompt>
+Finished!
+```
