@@ -1,4 +1,4 @@
-# Register and use a safety shield
+# Use a safety shield with optional registration
 
 import argparse, sys
 from common import create_library_client
@@ -16,7 +16,7 @@ allowed_shield_ids = {
 # "ValueError: Unsupported Llama Guard type: llama-guard-basic. Allowed types: {...}"
 # where I captured the allowed types in the allowed_shield_ids above.
 # def_provider_shield_id = 'llama-guard-basic'
-def_provider_shield_id = 'llama-guard'
+# def_provider_shield_id = 'llama-guard'
 
 # Trying one of the allowed types, e.g., the two definitions for def_provider_shield_id commented out below
 # gets past the register error, but then it fails during the "run_shield" step, even though the list of
@@ -25,7 +25,7 @@ def_provider_shield_id = 'Llama-Guard-3-1B'
 # def_provider_shield_id = 'meta-llama/Llama-Guard-3-1B'
 
 parser = argparse.ArgumentParser(
-                    prog='register-safety-shield',
+                    prog='safety-shield',
                     description='An extended version of the Llama Stack safety shield example here: https://llama-stack.readthedocs.io/en/latest/building_applications/safety.html',
                     epilog='')
 parser.add_argument('--id', '--provider-shield-id', 
