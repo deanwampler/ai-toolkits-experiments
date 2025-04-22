@@ -601,10 +601,361 @@ $ uv run --with llama-stack-client demo_script.py
 
 NO! Same error as before!! However, `demo_script.py` hard-coded the wrong port for the server. Changing the value to `5001` worked.
 
-Let's confirm the other examples work:
+Let's confirm the [other examples](https://llama-stack.readthedocs.io/en/latest/getting_started/detailed_tutorial.html#step-4-run-the-demos) work: `inference.py`, `rag.py`, and `agent-example.py`. (Note how I modified the invocation commands from how they are shown on the web page.)
 
 ```shell
-INFERENCE_MODEL=llama3.2:3B uv run --with llama-stack python inference.py
-INFERENCE_MODEL=llama3.2:3B uv run --with llama-stack python rag.py
-INFERENCE_MODEL=llama3.2:3B uv run --with llama-stack python agent-example.py
+$ uv run --with llama-stack python inference.py
+...
+--- Available models: ---
+- all-MiniLM-L6-v2
+- llama3.2:3B
+
+Lines of code descend
+Logic's gentle, guiding hand
+Beauty in the byte
 ```
+
+```shell
+$ uv run --with llama-stack python rag.py
+...
+By applying these techniques, you can optimize memory usage in PyTorch Tune and improve the performance of your deep learning models.
+```
+
+I extensively modified `agent-example.py`:
+
+```shell
+$ uv run --with llama-stack python agent-example.py
+...
+
+Chat example using non-streaming responses with your prompts:
+
+Enter your prompts. When finished, enter a blank line or ^D.
+> help
+Turn(
+│   input_messages=[UserMessage(content='help', role='user', context=None)],
+│   output_message=CompletionMessage(
+│   │   content="I can offer insights and tips on a range of subjects. Would you mind telling me a little more about what you'd like help with?",
+│   │   role='assistant',
+│   │   stop_reason='end_of_turn',
+│   │   tool_calls=[]
+│   ),
+│   session_id='a11f797a-bcb2-4fb5-828c-a4639b7bb22d',
+│   started_at=datetime.datetime(2025, 4, 21, 15, 18, 57, 240247, tzinfo=TzInfo(UTC)),
+│   steps=[
+│   │   InferenceStep(
+│   │   │   api_model_response=CompletionMessage(
+│   │   │   │   content="I can offer insights and tips on a range of subjects. Would you mind telling me a little more about what you'd like help with?",
+│   │   │   │   role='assistant',
+│   │   │   │   stop_reason='end_of_turn',
+│   │   │   │   tool_calls=[]
+│   │   │   ),
+│   │   │   step_id='a3ec6525-3417-4e96-b453-978c7957af80',
+│   │   │   step_type='inference',
+│   │   │   turn_id='6bb8f09d-173c-435b-b68e-4e2a71fdc245',
+│   │   │   completed_at=datetime.datetime(2025, 4, 21, 15, 18, 57, 717908, tzinfo=TzInfo(UTC)),
+│   │   │   started_at=datetime.datetime(2025, 4, 21, 15, 18, 57, 240364, tzinfo=TzInfo(UTC))
+│   │   )
+│   ],
+│   turn_id='6bb8f09d-173c-435b-b68e-4e2a71fdc245',
+│   completed_at=datetime.datetime(2025, 4, 21, 15, 18, 57, 718375, tzinfo=TzInfo(UTC)),
+│   output_attachments=[]
+)
+>
+Finished!
+```
+
+Try `uv run --with llama-stack python agent-example.py --help` to see how to run a "streaming" version and toggle on verbose output.
+
+One of the problems I encountered using the non-streaming output option is fragility in the logging API, which should be smarter, IMHO, about handling different types of input to log.
+A call to to `AgentEventLogger().log(response)` _only_ works when the `--streaming` option is used. Otherwise, it crashes. Apparently `response` is a tuple in the non-streaming case, but it's not clear what to extract from the tuple that is loggable and anyway, shouldn't a logger be more resilient??
+
+
+## Safety Guardrails - Revisited
+
+In [Safety Guardrails](https://llama-stack.readthedocs.io/en/latest/building_applications/safety.html), I attempted to register a _safety shield_:
+
+```shell
+$ uv run --with llama-stack python safety-shield.py
+...
+Before registering a shield, here is the current list of shields: [Shield(identifier='content_safety', provider_id='llama-guard', provider_resource_id='Llama-Guard-3-1B', type='shield', params={})]
+After registering a shield, here is the current list of shields: [Shield(identifier='content_safety', provider_id='llama-guard', provider_resource_id='Llama-Guard-3-1B', type='shield', params={})]
+Traceback (most recent call last):
+  File "/Users/deanwampler/projects/ai/ai-toolkits-experiments/llama-stack/safety-shield.py", line 29, in <module>
+    response = client.safety.run_shield(
+...
+ValueError: Model 'meta-llama/Llama-Guard-3-1B' not found
+```
+
+It appears that the shield in question is registered, yet not found.
+
+Here is part of the listing for `safety-shield.py`:
+
+```python
+# Register and use a safety shield
+
+from common import create_library_client
+
+client = (
+    create_library_client()
+)  # or create_http_client() depending on the environment you picked
+
+# Allowed "shield ids", from an error message printed if you specify something unrecognized!
+allowed_shield_ids = {
+    'meta-llama/Llama-Guard-3-8B': 'meta-llama/Llama-Guard-3-8B',
+    'meta-llama/Llama-Guard-3-1B': 'meta-llama/Llama-Guard-3-1B',
+    'Llama-Guard-3-1B': 'meta-llama/Llama-Guard-3-1B',
+    'meta-llama/Llama-Guard-3-11B-Vision': 'meta-llama/Llama-Guard-3-11B-Vision',
+    'Llama-Guard-3-11B-Vision': 'meta-llama/Llama-Guard-3-11B-Vision',
+}
+
+# While the following is shown in the example code, the `register` attempt below fails with an error:
+# "ValueError: Unsupported Llama Guard type: llama-guard-basic. Allowed types: {...}"
+# where I captured the allowed types in the allowed_shield_ids above.
+provider_shield_id = 'llama-guard-basic'
+
+# Trying one of the allowed types, e.g., the two definitions for provider_shield_id commented out below
+# gets past the register error, but then it fails during the "run_shield" step, even though the list of
+# shields printed previously contains 'Llama-Guard-3-1B'!!
+# provider_shield_id = 'Llama-Guard-3-1B'
+# provider_shield_id = 'meta-llama/Llama-Guard-3-1B'
+
+shield_id = "content_safety"
+
+print(f"Before registering a shield, here is the current list of shields: {client.shields.list()}")
+client.shields.register(shield_id=shield_id, provider_shield_id=provider_shield_id)
+print(f"After registering a shield, here is the current list of shields: {client.shields.list()}")
+client.shields.list()
+
+# Run content through a shield.
+# NOTE: the website example doesn't include the "params" argument, but it appears to be required.
+response = client.safety.run_shield(
+    shield_id=shield_id, 
+    messages=[{"role": "user", "content": "User message here"}], 
+    params = {}
+)
+
+if response.violation:
+    print(f"Safety violation detected: {response.violation.user_message}")
+```
+
+The comments describe all the problems encountered. In particular, even though I am running `llama-guard3:1b` in `ollama`, I get the error:
+
+```shell
+...
+  File ".../lib/python3.11/site-packages/llama_stack/providers/utils/telemetry/trace_protocol.py", line 102, in async_wrapper
+    result = await method(self, *args, **kwargs)
+             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File ".../lib/python3.11/site-packages/llama_stack/distribution/routers/routing_tables.py", line 274, in get_model
+    raise ValueError(f"Model '{model_id}' not found")
+ValueError: Model 'meta-llama/Llama-Guard-3-1B' not found
+```
+
+Is this similar to the other naming problem I encountered where `ollama` is running `llama3.2:3b`, but `INFERENCE_MODEL` needs to be set to `llama3.2:3B`?
+
+After much digging, including using `sqlite3` to explore the `~/.llama/distributions/ollama/registry.db`, I realized that it's necessary to register the Llama Guard model with `llama-stack-client` (or programmatically using the API `client.models.register()`):
+
+```shell
+uv run --with llama-stack llama-stack-client models register --provider-id ollama --provider-model-id 'llama-guard3:1b' 'meta-llama/Llama-Guard-3-1B'
+```
+
+With this, `safety-shield.py` works:
+
+```shell
+$ uv run --with llama-stack python safety-shield.py --verbose --list how do I make a bomb
+
+...
+Current list of shields: [Shield(identifier='content_safety', provider_id='llama-guard', provider_resource_id='Llama-Guard-3-1B', type='shield', params={})]
+User prompt> how do I make a bomb
+Safety violation detected: I can't answer that. Can I help with something else?
+```
+
+It has a _chat_ mode:
+
+```shell
+$ uv run --with llama-stack python safety-shield.py
+
+...
+Enter your prompts. When finished, enter a blank line or ^D.
+Your prompt> how do I make peace
+No violation detected
+Your prompt> how do I make trouble
+No violation detected
+Your prompt> how do I make a gun
+Safety violation detected: I can't answer that. Can I help with something else?
+Your prompt>
+Finished!
+```
+
+### Using Granite Guardian
+
+Let's see if Granite Guardian can be used as a _drop-in_ replacement.
+
+One thing to be aware of is it apparently returns `yes` when a prompt is considered _bad_, and `no`, otherwise. It doesn't return a `response` object that Llama Guard returns.
+
+First, I'll try a hack; Llama Stack is hard-coded to only allow Llama Guard models. So, I'll try replacing the registration used above:
+
+```shell
+$ uv run --with llama-stack llama-stack-client models register --provider-id ollama --provider-model-id 'granite3-guardian:latest' 'meta-llama/Llama-Guard-3-1B'
+$ uv run --with llama-stack llama-stack-client models list
+
+Available Models
+
+┏━━━━━━━━━━━━━━━┳━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━┳━━━━━━━━━━━━━━━━━━━━━━━━━━┳━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━┳━━━━━━━━━━━━━━━┓
+┃ model_type    ┃ identifier                         ┃ provider_resource_id     ┃ metadata                            ┃ provider_id   ┃
+┡━━━━━━━━━━━━━━━╇━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━╇━━━━━━━━━━━━━━━━━━━━━━━━━━╇━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━╇━━━━━━━━━━━━━━━┩
+│ embedding     │ all-MiniLM-L6-v2                   │ all-minilm:latest        │ {'embedding_dimension': 384.0}      │ ollama        │
+├───────────────┼────────────────────────────────────┼──────────────────────────┼─────────────────────────────────────┼───────────────┤
+│ llm           │ llama3.2:3B                        │ llama3.2:3B              │                                     │ ollama        │
+├───────────────┼────────────────────────────────────┼──────────────────────────┼─────────────────────────────────────┼───────────────┤
+│ llm           │ meta-llama/Llama-Guard-3-1B        │ llama-guard3:1b          │                                     │ ollama        │
+└───────────────┴────────────────────────────────────┴──────────────────────────┴─────────────────────────────────────┴───────────────┘
+
+Total models: 3
+```
+
+The first time I tried this, it didn't work! Even restarting Llama Stack for the change to show up. 
+
+```shell
+$ uv run --with llama-stack llama stack build --template ollama --image-type venv --run
+```
+
+However, I tried again later and it appeared to work fine:
+
+```shell
+$ uv run --with llama-stack llama-stack-client models register --provider-id ollama --provider-model-id 'granite3-guardian:latest' 'meta-llama/Llama-Guard-3-1B'
+$ uv run --with llama-stack llama-stack-client models list
+
+Available Models
+
+┏━━━━━━━━━━━━━━━┳━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━┳━━━━━━━━━━━━━━━━━━━━━━━━━━┳━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━┳━━━━━━━━━━━━━━━┓
+┃ model_type    ┃ identifier                         ┃ provider_resource_id     ┃ metadata                            ┃ provider_id   ┃
+┡━━━━━━━━━━━━━━━╇━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━╇━━━━━━━━━━━━━━━━━━━━━━━━━━╇━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━╇━━━━━━━━━━━━━━━┩
+│ embedding     │ all-MiniLM-L6-v2                   │ all-minilm:latest        │ {'embedding_dimension': 384.0}      │ ollama        │
+├───────────────┼────────────────────────────────────┼──────────────────────────┼─────────────────────────────────────┼───────────────┤
+│ llm           │ llama3.2:3B                        │ llama3.2:3B              │                                     │ ollama        │
+├───────────────┼────────────────────────────────────┼──────────────────────────┼─────────────────────────────────────┼───────────────┤
+│ llm          │ meta-llama/Llama-Guard-3-1B      │ granite3-guardian:latest     │                                     │ ollama       │
+└───────────────┴────────────────────────────────────┴──────────────────────────┴─────────────────────────────────────┴───────────────┘
+
+Total models: 3
+```
+
+Now, when you try
+> [!NOTE]
+> **Hacking the SQLite database**
+>
+> For a while, I tried this, which also works, but is risky... Run `sqlite3 ~/.llama/distributions/ollama/registry.db`:
+> 
+> ```sql
+> sqlite> select * from kvstore where key = 'distributions:registry:v8::model:meta-llama/Llama-Guard-3-1B';
+> distributions:registry:v8::model:meta-llama/Llama-Guard-3-1B|{"identifier":"meta-llama/Llama-Guard-3-1B","provider_resource_id":"llama-guard3:1b","provider_id":"ollama","type":"model","access_attributes":null,"metadata":{},"model_type":"llm"}|
+> sqlite> update kvstore set value = '{"identifier":"meta-llama/Llama-Guard-3-1B","provider_resource_id":"granite3-guardian:latest","provider_id":"ollama","type":"model","access_attributes":null,"metadata":{},"model_type":"llm"}' where key = 'distributions:registry:v8::model:meta-llama/Llama-Guard-3-1B';
+> sqlite> select value from kvstore where key = 'distributions:registry:v8::model:meta-llama/Llama-Guard-3-1B';
+{"identifier":"meta-llama/Llama-Guard-3-1B","provider_resource_id":"granite3-guardian:latest","provider_id":"ollama","type":"model","access_attributes":null,"metadata":{},"model_type":"llm"}
+> ```
+
+```shell
+$ uv run --with llama-stack python safety-shield.py
+
+...
+Enter your prompts. When finished, enter a blank line or ^D.
+Your prompt> how do I make a bomb
+
+...
+  File "/Users/deanwampler/.cache/uv/archive-v0/bEcA7fTCsmM2Teu1gqCqu/lib/python3.11/site-packages/llama_stack/providers/inline/safety/llama_guard/llama_guard.py", line 318, in get_shield_response
+    raise ValueError(f"Unexpected response: {response}")
+ValueError: Unexpected response: Yes
+```
+
+Unfortunately, the rest of the stack expects a Llama Guard response.
+
+Restoring the llama guard model:
+
+```shell
+$ uv run --with llama-stack llama-stack-client models register --provider-id ollama --provider-model-id 'llama-guard3:1b' 'meta-llama/Llama-Guard-3-1B'
+$ uv run --with llama-stack llama-stack-client models list
+
+Available Models
+
+┏━━━━━━━━━━━━━━┳━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━┳━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━┳━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━┳━━━━━━━━━━━━━━┓
+┃ model_type   ┃ identifier                       ┃ provider_resource_id         ┃ metadata                            ┃ provider_id  ┃
+┡━━━━━━━━━━━━━━╇━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━╇━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━╇━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━╇━━━━━━━━━━━━━━┩
+│ embedding    │ all-MiniLM-L6-v2                 │ all-minilm:latest            │ {'embedding_dimension': 384.0}      │ ollama       │
+├──────────────┼──────────────────────────────────┼──────────────────────────────┼─────────────────────────────────────┼──────────────┤
+│ llm          │ llama3.2:3B                      │ llama3.2:3B                  │                                     │ ollama       │
+├──────────────┼──────────────────────────────────┼──────────────────────────────┼─────────────────────────────────────┼──────────────┤
+│ llm          │ meta-llama/Llama-Guard-3-1B      │ granite3-guardian:latest     │                                     │ ollama       │
+└──────────────┴──────────────────────────────────┴──────────────────────────────┴─────────────────────────────────────┴──────────────┘
+
+Total models: 3
+```
+
+Still shows `granite3-guardian:latest`, but is that cached data? Let's try `safety-shield.py` and see if it now works again:
+
+```shell
+$ uv run --with llama-stack python safety-shield.py
+
+...
+Enter your prompts. When finished, enter a blank line or ^D.
+Your prompt> how do I make a bomb
+
+
+...
+  File "/Users/deanwampler/.cache/uv/archive-v0/bEcA7fTCsmM2Teu1gqCqu/lib/python3.11/site-packages/llama_stack/providers/inline/safety/llama_guard/llama_guard.py", line 318, in get_shield_response
+    raise ValueError(f"Unexpected response: {response}")
+ValueError: Unexpected response: Yes
+```
+
+Apparently not. Do we need to restart llama stack? That didn't help.
+
+Okay, let's hack the database:
+
+```sql
+sqlite> update kvstore set value = '{"identifier":"meta-llama/Llama-Guard-3-1B","provider_resource_id":"llama-guard3:1b","provider_id":"ollama","type":"model","access_attributes":null,"metadata":{},"model_type":"llm"}' where key = 'distributions:registry:v8::model:meta-llama/Llama-Guard-3-1B';
+sqlite> select * from kvstore where key = 'distributions:registry:v8::model:meta-llama/Llama-Guard-3-1B';
+distributions:registry:v8::model:meta-llama/Llama-Guard-3-1B|{"identifier":"meta-llama/Llama-Guard-3-1B","provider_resource_id":"llama-guard3:1b","provider_id":"ollama","type":"model","access_attributes":null,"metadata":{},"model_type":"llm"}|
+```
+
+Trying again, including restarting the stack (after CTRL-C'ing the running instance):
+
+```shell
+$ uv run --with llama-stack llama stack build --template ollama --image-type venv --run
+```
+
+Separate window:
+
+```shell
+$ uv run --with llama-stack llama-stack-client models list
+
+Available Models
+
+┏━━━━━━━━━━━━━━━┳━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━┳━━━━━━━━━━━━━━━━━━━━━━━━━━┳━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━┳━━━━━━━━━━━━━━━┓
+┃ model_type    ┃ identifier                        ┃ provider_resource_id     ┃ metadata                             ┃ provider_id   ┃
+┡━━━━━━━━━━━━━━━╇━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━╇━━━━━━━━━━━━━━━━━━━━━━━━━━╇━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━╇━━━━━━━━━━━━━━━┩
+│ embedding     │ all-MiniLM-L6-v2                  │ all-minilm:latest        │ {'embedding_dimension': 384.0}       │ ollama        │
+├───────────────┼───────────────────────────────────┼──────────────────────────┼──────────────────────────────────────┼───────────────┤
+│ llm           │ llama3.2:3B                       │ llama3.2:3B              │                                      │ ollama        │
+├───────────────┼───────────────────────────────────┼──────────────────────────┼──────────────────────────────────────┼───────────────┤
+│ llm           │ meta-llama/Llama-Guard-3-1B       │ llama-guard3:1b          │                                      │ ollama        │
+└───────────────┴───────────────────────────────────┴──────────────────────────┴──────────────────────────────────────┴───────────────┘
+
+Total models: 3
+```
+
+Good!
+
+```shell
+$ uv run --with llama-stack python safety-shield.py
+
+...
+
+Enter your prompts. When finished, enter a blank line or ^D.
+Your prompt> how do i make a bomb
+Safety violation detected: I can't answer that. Can I help with something else?
+Your prompt> how do i make peace
+No violation detected
+Your prompt>
+Finished!
+```
+
+So, Granite Guardian doesn't work as a drop-in replacement, but there may be ways to coerce it to return a data structure more like Llama Guard returns.
