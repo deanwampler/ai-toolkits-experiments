@@ -790,6 +790,9 @@ Finished!
 
 Let's see if Granite Guardian can be used as a _drop-in_ replacement.
 
+> [!NOTE]
+> [This ollama page](https://ollama.com/library/granite3-guardian) on Granite Guardian has a nice summary of the configuration options and features of Granite Guardian.
+
 One thing to be aware of is it apparently returns `yes` when a prompt is considered _bad_, and `no`, otherwise. It doesn't return a `response` object that Llama Guard returns.
 
 First, I'll try a hack; Llama Stack is hard-coded to only allow Llama Guard models. So, I'll try replacing the registration used above:
@@ -959,3 +962,227 @@ Finished!
 ```
 
 So, Granite Guardian doesn't work as a drop-in replacement, but there may be ways to coerce it to return a data structure more like Llama Guard returns.
+
+### Exploring the Safety Implementation; How Do We Get Granite Guardian to Work?
+
+(April 22, 2025)
+
+Here is the output from my attempt to use Granite Guardian hacked into the application, as discussed yesterday:
+
+```
+❯ uv run --with llama-stack python safety-shield.py
+INFO     2025-04-21 16:02:48,815 llama_stack.providers.remote.inference.ollama.ollama:89 inference: checking
+         connectivity to Ollama at `http://localhost:11434`...
+WARNING  2025-04-21 16:02:50,111 root:72 uncategorized: Warning: `bwrap` is not available. Code interpreter tool will
+         not work correctly.
+INFO     2025-04-21 16:02:50,146 llama_stack.providers.remote.inference.ollama.ollama:317 inference: Pulling embedding
+         model `all-minilm:latest` if necessary...
+Using config ollama:
+apis:
+- agents
+- datasetio
+- eval
+- inference
+- safety
+- scoring
+- telemetry
+- tool_runtime
+- vector_io
+benchmarks: []
+container_image: null
+datasets: []
+external_providers_dir: null
+image_name: ollama
+logging: null
+metadata_store:
+  db_path: /Users/deanwampler/.llama/distributions/ollama/registry.db
+  namespace: null
+  type: sqlite
+models:
+- metadata: {}
+  model_id: llama3.2:3B
+  model_type: !!python/object/apply:llama_stack.apis.models.models.ModelType
+  - llm
+  provider_id: ollama
+  provider_model_id: null
+- metadata:
+    embedding_dimension: 384
+  model_id: all-MiniLM-L6-v2
+  model_type: !!python/object/apply:llama_stack.apis.models.models.ModelType
+  - embedding
+  provider_id: ollama
+  provider_model_id: all-minilm:latest
+providers:
+  agents:
+  - config:
+      persistence_store:
+        db_path: /Users/deanwampler/.llama/distributions/ollama/agents_store.db
+        namespace: null
+        type: sqlite
+    provider_id: meta-reference
+    provider_type: inline::meta-reference
+  datasetio:
+  - config:
+      kvstore:
+        db_path: /Users/deanwampler/.llama/distributions/ollama/huggingface_datasetio.db
+        namespace: null
+        type: sqlite
+    provider_id: huggingface
+    provider_type: remote::huggingface
+  - config:
+      kvstore:
+        db_path: /Users/deanwampler/.llama/distributions/ollama/localfs_datasetio.db
+        namespace: null
+        type: sqlite
+    provider_id: localfs
+    provider_type: inline::localfs
+  eval:
+  - config:
+      kvstore:
+        db_path: /Users/deanwampler/.llama/distributions/ollama/meta_reference_eval.db
+        namespace: null
+        type: sqlite
+    provider_id: meta-reference
+    provider_type: inline::meta-reference
+  inference:
+  - config:
+      url: http://localhost:11434
+    provider_id: ollama
+    provider_type: remote::ollama
+  safety:
+  - config:
+      excluded_categories: []
+    provider_id: llama-guard
+    provider_type: inline::llama-guard
+  scoring:
+  - config: {}
+    provider_id: basic
+    provider_type: inline::basic
+  - config: {}
+    provider_id: llm-as-judge
+    provider_type: inline::llm-as-judge
+  - config:
+      openai_api_key: '********'
+    provider_id: braintrust
+    provider_type: inline::braintrust
+  telemetry:
+  - config:
+      service_name: "\u200B"
+      sinks: sqlite
+      sqlite_db_path: /Users/deanwampler/.llama/distributions/ollama/trace_store.db
+    provider_id: meta-reference
+    provider_type: inline::meta-reference
+  tool_runtime:
+  - config:
+      api_key: '********'
+      max_results: 3
+    provider_id: brave-search
+    provider_type: remote::brave-search
+  - config:
+      api_key: '********'
+      max_results: 3
+    provider_id: tavily-search
+    provider_type: remote::tavily-search
+  - config: {}
+    provider_id: code-interpreter
+    provider_type: inline::code-interpreter
+  - config: {}
+    provider_id: rag-runtime
+    provider_type: inline::rag-runtime
+  - config: {}
+    provider_id: model-context-protocol
+    provider_type: remote::model-context-protocol
+  - config:
+      api_key: '********'
+    provider_id: wolfram-alpha
+    provider_type: remote::wolfram-alpha
+  vector_io:
+  - config:
+      kvstore:
+        db_path: /Users/deanwampler/.llama/distributions/ollama/faiss_store.db
+        namespace: null
+        type: sqlite
+    provider_id: faiss
+    provider_type: inline::faiss
+scoring_fns: []
+server:
+  auth: null
+  port: 8321
+  tls_certfile: null
+  tls_keyfile: null
+shields: []
+tool_groups:
+- args: null
+  mcp_endpoint: null
+  provider_id: tavily-search
+  toolgroup_id: builtin::websearch
+- args: null
+  mcp_endpoint: null
+  provider_id: rag-runtime
+  toolgroup_id: builtin::rag
+- args: null
+  mcp_endpoint: null
+  provider_id: code-interpreter
+  toolgroup_id: builtin::code_interpreter
+- args: null
+  mcp_endpoint: null
+  provider_id: wolfram-alpha
+  toolgroup_id: builtin::wolfram_alpha
+vector_dbs: []
+version: '2'
+
+
+Enter your prompts. When finished, enter a blank line or ^D.
+Your prompt> how do I make a bomb
+Traceback (most recent call last):
+  File "/Users/deanwampler/projects/ai/ai-toolkits-experiments/llama-stack/safety-shield.py", line 87, in <module>
+    check_prompt(user_prompt)
+  File "/Users/deanwampler/projects/ai/ai-toolkits-experiments/llama-stack/safety-shield.py", line 66, in check_prompt
+    response = client.safety.run_shield(
+               ^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/Users/deanwampler/.cache/uv/archive-v0/bEcA7fTCsmM2Teu1gqCqu/lib/python3.11/site-packages/llama_stack_client/resources/safety.py", line 73, in run_shield
+    return self._post(
+           ^^^^^^^^^^^
+  File "/Users/deanwampler/.cache/uv/archive-v0/bEcA7fTCsmM2Teu1gqCqu/lib/python3.11/site-packages/llama_stack_client/_base_client.py", line 1225, in post
+    return cast(ResponseT, self.request(cast_to, opts, stream=stream, stream_cls=stream_cls))
+                           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/Users/deanwampler/.cache/uv/archive-v0/bEcA7fTCsmM2Teu1gqCqu/lib/python3.11/site-packages/llama_stack/distribution/library_client.py", line 177, in request
+    return asyncio.run(self.async_client.request(*args, **kwargs))
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/opt/homebrew/Caskroom/miniforge/base/envs/python-311/lib/python3.11/asyncio/runners.py", line 190, in run
+    return runner.run(main)
+           ^^^^^^^^^^^^^^^^
+  File "/opt/homebrew/Caskroom/miniforge/base/envs/python-311/lib/python3.11/asyncio/runners.py", line 118, in run
+    return self._loop.run_until_complete(task)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/opt/homebrew/Caskroom/miniforge/base/envs/python-311/lib/python3.11/asyncio/base_events.py", line 654, in run_until_complete
+    return future.result()
+           ^^^^^^^^^^^^^^^
+  File "/Users/deanwampler/.cache/uv/archive-v0/bEcA7fTCsmM2Teu1gqCqu/lib/python3.11/site-packages/llama_stack/distribution/library_client.py", line 265, in request
+    response = await self._call_non_streaming(
+               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/Users/deanwampler/.cache/uv/archive-v0/bEcA7fTCsmM2Teu1gqCqu/lib/python3.11/site-packages/llama_stack/distribution/library_client.py", line 286, in _call_non_streaming
+    result = await matched_func(**body)
+             ^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/Users/deanwampler/.cache/uv/archive-v0/bEcA7fTCsmM2Teu1gqCqu/lib/python3.11/site-packages/llama_stack/providers/utils/telemetry/trace_protocol.py", line 102, in async_wrapper
+    result = await method(self, *args, **kwargs)
+             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/Users/deanwampler/.cache/uv/archive-v0/bEcA7fTCsmM2Teu1gqCqu/lib/python3.11/site-packages/llama_stack/distribution/routers/routers.py", line 617, in run_shield
+    return await self.routing_table.get_provider_impl(shield_id).run_shield(
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/Users/deanwampler/.cache/uv/archive-v0/bEcA7fTCsmM2Teu1gqCqu/lib/python3.11/site-packages/llama_stack/providers/utils/telemetry/trace_protocol.py", line 102, in async_wrapper
+    result = await method(self, *args, **kwargs)
+             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/Users/deanwampler/.cache/uv/archive-v0/bEcA7fTCsmM2Teu1gqCqu/lib/python3.11/site-packages/llama_stack/providers/inline/safety/llama_guard/llama_guard.py", line 172, in run_shield
+    return await impl.run(messages)
+           ^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/Users/deanwampler/.cache/uv/archive-v0/bEcA7fTCsmM2Teu1gqCqu/lib/python3.11/site-packages/llama_stack/providers/inline/safety/llama_guard/llama_guard.py", line 248, in run
+    return self.get_shield_response(content)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/Users/deanwampler/.cache/uv/archive-v0/bEcA7fTCsmM2Teu1gqCqu/lib/python3.11/site-packages/llama_stack/providers/inline/safety/llama_guard/llama_guard.py", line 318, in get_shield_response
+    raise ValueError(f"Unexpected response: {response}")
+ValueError: Unexpected response: Yes
+```
+
+Clearly Granite Guardian isn't returning what's expected by Llama Stack, but this stack trace is useful for figuring out where in the code we need to add modifications to make Granite Guardian work.
+
