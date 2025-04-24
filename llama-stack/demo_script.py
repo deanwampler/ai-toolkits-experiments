@@ -1,3 +1,4 @@
+import readline  # enhances the input() function with real command-line editing, history, etc.
 from llama_stack_client import Agent, AgentEventLogger, RAGDocument, LlamaStackClient
 
 vector_db_id = "my_demo_vector_db"

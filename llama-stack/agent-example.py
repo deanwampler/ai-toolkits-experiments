@@ -1,8 +1,12 @@
 # Register a safety shield
 
 from common import create_library_client
+from gofannon.google_search.google_search import GoogleSearch
+
 import argparse
-import sys
+import os, re, sys
+import readline  # enhances the input() function with real command-line editing, history, etc.
+from termcolor import colored
 from types import GeneratorType
 from llama_stack_client import AgentEventLogger
 from llama_stack_client import Agent
@@ -11,10 +15,23 @@ from rich.pretty import pprint
 from rich.pretty import Pretty
 from rich.panel import Panel
 
+# For gofannon and the Google API client:
+# pip install git+https://github.com/rawkintrevo/gofannon.git@161 --quiet
+# pip install google-api-python-client
+# pip install bwrap
+
+# Ollama-compatible names:
+def_model = "llama3.2:3B"
+# def_model = "llama3.2:1b-instruct-fp16"
+# def_model = "llama3.2:3b-instruct-turbo"
+
 parser = argparse.ArgumentParser(
                     prog='agent-example',
                     description='An extended version of the Llama Stack agent example here: https://llama-stack.readthedocs.io/en/latest/building_applications/agent.html',
                     epilog='')
+parser.add_argument('-m', '--model',
+                    default=def_model,
+                    help=f"The model to use (default is {def_model})")
 parser.add_argument('-s', '--streaming',
                     action="store_true",
                     help="Run the chat example with streaming output (default is non-streaming)")
@@ -27,14 +44,29 @@ client = (
     create_library_client()
 )  # or create_http_client() depending on the environment you picked
 
+google_search = GoogleSearch(api_key=os.getenv("GOOGLE_API_KEY"), engine_id="75be790deec0c42f3")
+google_search_for_llama_stack = google_search.export_to_llamastack()
+print(f"google_search_for_llama_stack: {google_search_for_llama_stack}")
+
 # Create the agent, configuring the model and two tools.
 agent = Agent(
     client,
-    model="llama3.2:3B",
-#    model="meta-llama/Llama-3-70b-chat",
+    model=args.model,
     instructions="You are a helpful assistant that can use tools to answer questions.",
-    tools=["builtin::code_interpreter", "builtin::rag/knowledge_search"],
+    sampling_params={
+        "strategy": {"type": "top_p", "temperature": 1.0, "top_p": 0.9},
+    },
+    tools=[
+        # Note: While you can also use "builtin::websearch" as a tool,
+        # this example shows how to use a client side custom web search tool.
+        google_search_for_llama_stack,
+        # "builtin::websearch",
+        # "builtin::code_interpreter", 
+        # "builtin::rag/knowledge_search",
+    ],
 )
+
+pprint(f"agent.agent_config = {agent.agent_config}")
 
 # Create a session
 session_id = agent.create_session(session_name="Test conversation")
@@ -67,14 +99,15 @@ if args.streaming and not args.verbose:
     args.verbose = True
 
 def format_response(response) -> Pretty:
-    return Pretty(f"""
+    # return Pretty(f"""
+    return f"""
 Input:  
 {response.input_messages}
 Output: 
 {response.output_message.content}
 Steps:
 {response.steps}
-""")
+"""
 
 streaming_msg="non-streaming"
 if args.streaming:
@@ -89,9 +122,14 @@ def do_log(response):
 
 def pp_response(response):
     if isinstance(response, GeneratorType):
+        print("Generator response...")
         for res in response:
-            pprint(res)
+            if args.verbose:
+                pprint(res)
+            else:
+                pprint(res.event.payload.tool_call)
     else:
+        print("Single response...")
         pprint(response)
 
 def log_response(response):
@@ -106,15 +144,37 @@ def log_response(response):
         # else:
         #     do_log(response)
 
-print(f"Chat example using {streaming_msg} responses with your prompts:")
-print("\nEnter your prompts. When finished, enter a blank line or ^D.")
+example_prompts = [
+    "When did Pope Francis die?",
+    "Use google search to determine when Pope Francis died.",
+    "What is the current weather in Chicago?",
+]
+
+def print_examples():
+    print("Examples (enter the number to try them):")
+    for i in range(len(example_prompts)):
+        print(f"{(i+1):2d}: {example_prompts[i]}")
+
+print(f"""A chat agent example app using {streaming_msg} responses:
+Enter your prompts. When finished, enter a blank line or ^D.
+""")
 user_prompt = " "
 while True:
     try:
+        print_examples()
         user_prompt = input("> ")
         if user_prompt == "":
             print("Finished!")
             break
+        elif re.fullmatch(r'^\d+$', user_prompt):
+            index = int(user_prompt)
+            num_examples = len(example_prompts)
+            if index < 1 or index > num_examples:
+                print(f"For running an example, input a number between 1 and {num_examples}")
+                continue
+            else:
+                user_prompt = example_prompts[index-1]
+                print(f"Using example prompt> {user_prompt}")
         response = agent.create_turn(
             session_id=session_id,
             messages=[{"role": "user", "content": user_prompt}],

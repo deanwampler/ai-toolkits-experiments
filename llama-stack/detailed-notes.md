@@ -1186,3 +1186,11 @@ ValueError: Unexpected response: Yes
 
 Clearly Granite Guardian isn't returning what's expected by Llama Stack, but this stack trace is useful for figuring out where in the code we need to add modifications to make Granite Guardian work.
 
+Also, note the warning about `bwrap`:
+
+```
+WARNING  2025-04-21 16:02:50,111 root:72 uncategorized: Warning: `bwrap` is not available. Code interpreter tool will not work correctly.
+```
+
+This is a sandbox tool and might only be available on Linux(?).
+
