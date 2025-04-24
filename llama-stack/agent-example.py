@@ -2,9 +2,7 @@
 
 from common import create_library_client
 from gofannon.google_search.google_search import GoogleSearch
-
-import argparse
-import os, re, sys
+import argparse, os, re, sys
 import readline  # enhances the input() function with real command-line editing, history, etc.
 from termcolor import colored
 from types import GeneratorType
@@ -26,6 +24,7 @@ def_model = "llama3.2:3B"
 # def_model = "llama3.3:70b"                  # 43GB
 # def_model = "llama3.3:70b-instruct-fp16"    # 143GB - too big for a laptop, so not tried!
 # def_model = "llama3.3:70b-instruct-q4_K_M"  # 43GB - manageable!
+# def_model = "llama3-chatqa:70b"             # 40GB - trained by NVIDIA and closest to what the Gofannon example uses with an external service: meta-llama/Llama-3-70b-chat
 
 parser = argparse.ArgumentParser(
                     prog='agent-example',
@@ -101,7 +100,6 @@ if args.streaming and not args.verbose:
     args.verbose = True
 
 def format_response(response) -> Pretty:
-    # return Pretty(f"""
     return f"""
 Input:  
 {response.input_messages}
@@ -124,14 +122,16 @@ def do_log(response):
 
 def pp_response(response):
     if isinstance(response, GeneratorType):
-        print("Generator response...")
+        if args.verbose:
+            print("Generator response...")
         for res in response:
             if args.verbose:
                 pprint(res)
             else:
                 pprint(res.event.payload.tool_call)
     else:
-        print("Single response...")
+        if args.verbose:
+            print("Non-generator response...")
         pprint(response)
 
 def log_response(response):
@@ -152,20 +152,18 @@ example_prompts = [
     "What is the current weather in Chicago?",
 ]
 
-def print_examples():
+def prompt() -> str:
+    print(f"Enter your prompts. When finished, enter a blank line, 'q', 'quit', or ^D.")
     print("Examples (enter the number to try them):")
     for i in range(len(example_prompts)):
         print(f"{(i+1):2d}: {example_prompts[i]}")
+    return input("> ")
 
-print(f"""A chat agent example app using {streaming_msg} responses:
-Enter your prompts. When finished, enter a blank line or ^D.
-""")
-user_prompt = " "
+print(f"A chat agent example app using {streaming_msg} responses:")
 while True:
     try:
-        print_examples()
-        user_prompt = input("> ")
-        if user_prompt == "":
+        user_prompt = prompt()
+        if user_prompt == "" or user_prompt == "q" or user_prompt == "quit":
             print("Finished!")
             break
         elif re.fullmatch(r'^\d+$', user_prompt):
