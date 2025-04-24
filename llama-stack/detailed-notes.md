@@ -1194,3 +1194,63 @@ WARNING  2025-04-21 16:02:50,111 root:72 uncategorized: Warning: `bwrap` is not 
 
 This is a sandbox tool and might only be available on Linux(?).
 
+
+## More Exploration of Agents
+
+(April 23, 2025)
+
+The AI Alliance [Gofannon](https://the-ai-alliance.github.io/gofannon/) project is a catalog of contributed tools that are portable across many different application frameworks, with a [PR for Llama Stack integration](https://github.com/The-AI-Alliance/gofannon/pull/275). I'll explore this on a branch of my repo, [`gofannon-example`](https://github.com/deanwampler/ai-toolkits-experiments/tree/gofannon-example), because I have to use a fork of Gofannon with the integration and because of the required extra dependencies.
+
+I'll need some dependencies (I believe `aiosqlite` was needed for a different issue...):
+
+```shell
+uv run --with llama-stack pip install \
+  git+https://github.com/rawkintrevo/gofannon.git@161 \
+  google-api-python-client \
+  aiosqlite
+```
+
+The Gofannon function I'll try is the one supporting invocations of Google Search. The relevant code added to `agent-example.py` is here:
+
+```python
+...
+from gofannon.google_search.google_search import GoogleSearch
+...
+google_search = GoogleSearch(
+  api_key=os.getenv("GOOGLE_API_KEY"), engine_id="75be790deec0c42f3")
+google_search_for_llama_stack = google_search.export_to_llamastack()
+...
+agent = Agent(
+    client,
+    model="...",  # see below
+    instructions="You are a helpful assistant that can use tools to answer questions.",
+    sampling_params={
+        "strategy": {"type": "top_p", "temperature": 1.0, "top_p": 0.9},
+    },
+    tools=[
+        # Note: While you can also use "builtin::websearch" as a tool,
+        # this example shows how to use a client side custom web search tool.
+        google_search_for_llama_stack,
+        # "builtin::websearch",
+        # "builtin::code_interpreter",
+        # "builtin::rag/knowledge_search",
+    ],
+)
+```
+
+Note that you need a Google developer account and an API key, which store in an environment variable.
+
+For plugins like this Gofannon function, you are expected to pass a function with a doc string and argument list meeting certain criteria.
+
+
+I tried using several models through ollama and found that most of them were not really capable of invoking tools, like Google Search.
+
+
+Models I tried (ollama-compatible names):
+
+* `llama3.2:3B`
+* `llama3.2:1b-instruct-fp16`
+* `llama3.2:3b-instruct-turbo`
+* `llama3.3:70b`                  # 43GB
+* `llama3.3:70b-instruct-fp16`    # 143GB - too big for a laptop, so not tried!
+* `llama3.3:70b-instruct-q4_K_M`  # 43GB - manageable!

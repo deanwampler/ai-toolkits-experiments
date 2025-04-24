@@ -18,12 +18,14 @@ from rich.panel import Panel
 # For gofannon and the Google API client:
 # pip install git+https://github.com/rawkintrevo/gofannon.git@161 --quiet
 # pip install google-api-python-client
-# pip install bwrap
 
 # Ollama-compatible names:
 def_model = "llama3.2:3B"
 # def_model = "llama3.2:1b-instruct-fp16"
 # def_model = "llama3.2:3b-instruct-turbo"
+# def_model = "llama3.3:70b"                  # 43GB
+# def_model = "llama3.3:70b-instruct-fp16"    # 143GB - too big for a laptop, so not tried!
+# def_model = "llama3.3:70b-instruct-q4_K_M"  # 43GB - manageable!
 
 parser = argparse.ArgumentParser(
                     prog='agent-example',
