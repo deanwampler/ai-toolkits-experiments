@@ -141,20 +141,18 @@ example_prompts = [
     "What is the current weather in Chicago?",
 ]
 
-def print_examples():
+def prompt() -> str:
+    print(f"Enter your prompts. When finished, enter a blank line, 'q', 'quit', or ^D.")
     print("Examples (enter the number to try them):")
     for i in range(len(example_prompts)):
         print(f"{(i+1):2d}: {example_prompts[i]}")
+    return input("> ")
 
-print(f"""A chat agent example app using {streaming_msg} responses:
-Enter your prompts. When finished, enter a blank line or ^D.
-""")
-user_prompt = " "
+print(f"A chat agent example app using {streaming_msg} responses:")
 while True:
     try:
-        print_examples()
-        user_prompt = input("> ")
-        if user_prompt == "":
+        user_prompt = prompt()
+        if user_prompt == "" or user_prompt == "q" or user_prompt == "quit":
             print("Finished!")
             break
         elif re.fullmatch(r'^\d+$', user_prompt):
