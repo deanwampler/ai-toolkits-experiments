@@ -1,6 +1,7 @@
 # Use a safety shield with optional registration
 
 import argparse, sys
+import readline  # enhances the input() function with real command-line editing, history, etc.
 from common import create_library_client
 
 # Allowed "shield ids", from an error message printed if you specify something unrecognized!

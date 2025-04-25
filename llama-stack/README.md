@@ -417,6 +417,9 @@ Finished!
 
 Let's see if Granite Guardian can be used as a _drop-in_ replacement.
 
+> [!NOTE]
+> [This ollama page](https://ollama.com/library/granite3-guardian) on Granite Guardian has a nice summary of the configuration options and features of Granite Guardian.
+
 One thing to be aware of is it apparently returns `yes` when a prompt is considered _bad_, and `no`, otherwise. It doesn't return a `response` object that Llama Guard returns.
 
 First, I'll try a hack; Llama Stack is hard-coded to only allow Llama Guard models. So, I'll try replacing the registration used above:
