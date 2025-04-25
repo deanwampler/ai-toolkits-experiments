@@ -7,7 +7,7 @@ April 21, 2025
 > [!NOTE]
 > There is a long file of [_lab notes_](detailed-notes.md) that I kept while trying various things documented for Llama Stack. Not everything said at the beginning applied by the time I got to the end! This file summarizes the latest details that work as of the date above.
 
-Follow these instructions for use with Ollama:
+In what follows, we use [Ollama](https://ollama.com) to serve models. Follow these instructions to use Ollama with Llama Stack:
 
 https://llama-stack.readthedocs.io/en/latest/distributions/self_hosted_distro/ollama.html
 
