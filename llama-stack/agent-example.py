@@ -47,7 +47,20 @@ client = (
 
 google_search = GoogleSearch(api_key=os.getenv("GOOGLE_API_KEY"), engine_id="75be790deec0c42f3")
 google_search_for_llama_stack = google_search.export_to_llamastack()
-print(f"google_search_for_llama_stack: {google_search_for_llama_stack}")
+
+if args.verbose:
+    import inspect
+    print("Details about `google_search_for_llama_stack`:")
+    print(f"Members:")
+    for x in inspect.getmembers(google_search_for_llama_stack):
+        print(f"  {x} => {str(x)}")
+    print(f"str(google_search_for_llama_stack). Static Members:")
+    for x in inspect.getmembers_static(google_search_for_llama_stack):
+        print(f"  {x} => {str(x)}")
+    print(f"Is it a function? {inspect.isfunction(google_search_for_llama_stack)}")
+    print(f"The function signature: {str(inspect.signature(google_search_for_llama_stack))}")
+    print(f"Code comments:\n{inspect.getcomments(google_search_for_llama_stack)}")
+    print(f"The doc string:\n{google_search_for_llama_stack.__doc__}")
 
 # Create the agent, configuring the model and two tools.
 agent = Agent(

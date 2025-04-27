@@ -1254,3 +1254,887 @@ Models I tried (ollama-compatible names):
 * `llama3.3:70b`                  # 43GB
 * `llama3.3:70b-instruct-fp16`    # 143GB - too big for a laptop, so not tried!
 * `llama3.3:70b-instruct-q4_K_M`  # 43GB - manageable!
+* `llama3-chatqa:70b`             # 40GB - trained by NVIDIA and closest to what the Gofannon example uses with an external service: meta-llama/Llama-3-70b-chat
+
+Let's try these models using the script `run-agent-example.sh`, which conveniently lets us pick the model by number:
+
+```shell
+$ run-agent-example.sh 1
+run-agent-example.sh:  INFO: uv run --with llama-stack python agent-example.py --model llama3.2:3B
+INFO     2025-04-24 17:29:52,653 llama_stack.providers.remote.inference.ollama.ollama:89 inference: checking
+         connectivity to Ollama at `http://localhost:11434`...
+WARNING  2025-04-24 17:29:54,233 root:72 uncategorized: Warning: `bwrap` is not available. Code interpreter tool will
+         not work correctly.
+INFO     2025-04-24 17:29:54,286 llama_stack.providers.remote.inference.ollama.ollama:317 inference: Pulling embedding
+         model `all-minilm:latest` if necessary...
+...
+
+A chat agent example app using non-streaming responses:
+Enter your prompts. When finished, enter a blank line, 'q', 'quit', or ^D.
+Examples (enter the number to try them):
+ 1: When did Pope Francis die?
+ 2: Use google search to determine when Pope Francis died.
+ 3: What is the current weather in Chicago?
+> 1
+Using example prompt> When did Pope Francis die?
+Turn(
+│   input_messages=[UserMessage(content='When did Pope Francis die?', role='user', context=None)],
+│   output_message=CompletionMessage(
+│   │   content="I couldn't find any information on Pope Francis passing away or dying. As of my knowledge cutoff in December 2023, Pope Francis is still alive and serving as the head of the Catholic Church. However, please note that this information might not be up to date, and you should verify it through a reliable news source for the most recent updates.",
+│   │   role='assistant',
+│   │   stop_reason='end_of_turn',
+│   │   tool_calls=[]
+│   ),
+│   session_id='d77187b7-ac32-4950-9ce9-ab9092f8e2c3',
+│   started_at=datetime.datetime(2025, 4, 24, 21, 29, 58, 185071, tzinfo=TzInfo(UTC)),
+│   steps=[
+│   │   InferenceStep(
+│   │   │   api_model_response=CompletionMessage(
+│   │   │   │   content="I couldn't find any information on Pope Francis passing away or dying. As of my knowledge cutoff in December 2023, Pope Francis is still alive and serving as the head of the Catholic Church. However, please note that this information might not be up to date, and you should verify it through a reliable news source for the most recent updates.",
+│   │   │   │   role='assistant',
+│   │   │   │   stop_reason='end_of_turn',
+│   │   │   │   tool_calls=[]
+│   │   │   ),
+│   │   │   step_id='0323fb1c-eac9-4609-b100-3265369d3007',
+│   │   │   step_type='inference',
+│   │   │   turn_id='5996f4d7-3c18-4eb9-908c-c7ff2b67a68c',
+│   │   │   completed_at=datetime.datetime(2025, 4, 24, 21, 30, 0, 645783, tzinfo=TzInfo(UTC)),
+│   │   │   started_at=datetime.datetime(2025, 4, 24, 21, 29, 58, 185187, tzinfo=TzInfo(UTC))
+│   │   )
+│   ],
+│   turn_id='5996f4d7-3c18-4eb9-908c-c7ff2b67a68c',
+│   completed_at=datetime.datetime(2025, 4, 24, 21, 30, 0, 646223, tzinfo=TzInfo(UTC)),
+│   output_attachments=[]
+)
+Enter your prompts. When finished, enter a blank line, 'q', 'quit', or ^D.
+Examples (enter the number to try them):
+ 1: When did Pope Francis die?
+ 2: Use google search to determine when Pope Francis died.
+ 3: What is the current weather in Chicago?
+> q
+Finished!
+```
+
+So, it didn't attempt to use Google Search. Using the `--streaming` option made no difference. Let's try the rest of the models, where I'll show less of the output.
+
+```shell
+$ run-agent-example.sh 2
+run-agent-example.sh:  INFO: uv run --with llama-stack python agent-example.py --model llama3.2:1b-instruct-fp16
+...
+
+Enter your prompts. When finished, enter a blank line, 'q', 'quit', or ^D.
+Examples (enter the number to try them):
+ 1: When did Pope Francis die?
+ 2: Use google search to determine when Pope Francis died.
+ 3: What is the current weather in Chicago?
+> 1
+Using example prompt> When did Pope Francis die?
+Turn(
+│   input_messages=[UserMessage(content='When did Pope Francis die?', role='user', context=None)],
+│   output_message=CompletionMessage(content='[]', role='assistant', stop_reason='end_of_turn', tool_calls=[]),
+│   session_id='9e875a1b-9f59-4b51-99ea-5b0fc08bf0a5',
+│   started_at=datetime.datetime(2025, 4, 24, 21, 34, 31, 849566, tzinfo=TzInfo(UTC)),
+│   steps=[
+│   │   InferenceStep(
+│   │   │   api_model_response=CompletionMessage(content='[]', role='assistant', stop_reason='end_of_turn', tool_calls=[]),
+│   │   │   step_id='9099cb7e-cb58-4d33-9cd4-5af0db0f22af',
+│   │   │   step_type='inference',
+│   │   │   turn_id='7b045075-634b-436c-a0f4-139ebfa86859',
+│   │   │   completed_at=datetime.datetime(2025, 4, 24, 21, 34, 33, 500165, tzinfo=TzInfo(UTC)),
+│   │   │   started_at=datetime.datetime(2025, 4, 24, 21, 34, 31, 849768, tzinfo=TzInfo(UTC))
+│   │   )
+│   ],
+│   turn_id='7b045075-634b-436c-a0f4-139ebfa86859',
+│   completed_at=datetime.datetime(2025, 4, 24, 21, 34, 33, 500780, tzinfo=TzInfo(UTC)),
+│   output_attachments=[]
+)
+...
+```
+
+This one produced _nothing_ remotely useful for the non-streaming case, but the streaming answer was... bizarre.
+
+```shell
+❯ run-agent-example.sh 2 -s
+run-agent-example.sh:  INFO: uv run --with llama-stack python agent-example.py --model llama3.2:1b-instruct-fp16 --streaming
+INFO     2025-04-24 17:37:34,860 llama_stack.providers.remote.inference.ollama.ollama:89 inference: checking
+         connectivity to Ollama at `http://localhost:11434`...
+WARNING  2025-04-24 17:37:36,148 root:72 uncategorized: Warning: `bwrap` is not available. Code interpreter tool will
+         not work correctly.
+INFO     2025-04-24 17:37:36,183 llama_stack.providers.remote.inference.ollama.ollama:317 inference: Pulling embedding
+         model `all-minilm:latest` if necessary...
+Using config ollama:
+apis:
+- agents
+- datasetio
+- eval
+- inference
+- safety
+- scoring
+- telemetry
+- tool_runtime
+- vector_io
+benchmarks: []
+container_image: null
+datasets: []
+external_providers_dir: null
+image_name: ollama
+logging: null
+metadata_store:
+  db_path: /Users/deanwampler/.llama/distributions/ollama/registry.db
+  namespace: null
+  type: sqlite
+models:
+- metadata: {}
+  model_id: granite3.3:8b
+  model_type: !!python/object/apply:llama_stack.apis.models.models.ModelType
+  - llm
+  provider_id: ollama
+  provider_model_id: null
+- metadata:
+    embedding_dimension: 384
+  model_id: all-MiniLM-L6-v2
+  model_type: !!python/object/apply:llama_stack.apis.models.models.ModelType
+  - embedding
+  provider_id: ollama
+  provider_model_id: all-minilm:latest
+providers:
+  agents:
+  - config:
+      persistence_store:
+        db_path: /Users/deanwampler/.llama/distributions/ollama/agents_store.db
+        namespace: null
+        type: sqlite
+    provider_id: meta-reference
+    provider_type: inline::meta-reference
+  datasetio:
+  - config:
+      kvstore:
+        db_path: /Users/deanwampler/.llama/distributions/ollama/huggingface_datasetio.db
+        namespace: null
+        type: sqlite
+    provider_id: huggingface
+    provider_type: remote::huggingface
+  - config:
+      kvstore:
+        db_path: /Users/deanwampler/.llama/distributions/ollama/localfs_datasetio.db
+        namespace: null
+        type: sqlite
+    provider_id: localfs
+    provider_type: inline::localfs
+  eval:
+  - config:
+      kvstore:
+        db_path: /Users/deanwampler/.llama/distributions/ollama/meta_reference_eval.db
+        namespace: null
+        type: sqlite
+    provider_id: meta-reference
+    provider_type: inline::meta-reference
+  inference:
+  - config:
+      url: http://localhost:11434
+    provider_id: ollama
+    provider_type: remote::ollama
+  safety:
+  - config:
+      excluded_categories: []
+    provider_id: llama-guard
+    provider_type: inline::llama-guard
+  scoring:
+  - config: {}
+    provider_id: basic
+    provider_type: inline::basic
+  - config: {}
+    provider_id: llm-as-judge
+    provider_type: inline::llm-as-judge
+  - config:
+      openai_api_key: '********'
+    provider_id: braintrust
+    provider_type: inline::braintrust
+  telemetry:
+  - config:
+      service_name: "\u200B"
+      sinks: sqlite
+      sqlite_db_path: /Users/deanwampler/.llama/distributions/ollama/trace_store.db
+    provider_id: meta-reference
+    provider_type: inline::meta-reference
+  tool_runtime:
+  - config:
+      api_key: '********'
+      max_results: 3
+    provider_id: brave-search
+    provider_type: remote::brave-search
+  - config:
+      api_key: '********'
+      max_results: 3
+    provider_id: tavily-search
+    provider_type: remote::tavily-search
+  - config: {}
+    provider_id: code-interpreter
+    provider_type: inline::code-interpreter
+  - config: {}
+    provider_id: rag-runtime
+    provider_type: inline::rag-runtime
+  - config: {}
+    provider_id: model-context-protocol
+    provider_type: remote::model-context-protocol
+  - config:
+      api_key: '********'
+    provider_id: wolfram-alpha
+    provider_type: remote::wolfram-alpha
+  vector_io:
+  - config:
+      kvstore:
+        db_path: /Users/deanwampler/.llama/distributions/ollama/faiss_store.db
+        namespace: null
+        type: sqlite
+    provider_id: faiss
+    provider_type: inline::faiss
+scoring_fns: []
+server:
+  auth: null
+  port: 8321
+  tls_certfile: null
+  tls_keyfile: null
+shields: []
+tool_groups:
+- args: null
+  mcp_endpoint: null
+  provider_id: tavily-search
+  toolgroup_id: builtin::websearch
+- args: null
+  mcp_endpoint: null
+  provider_id: rag-runtime
+  toolgroup_id: builtin::rag
+- args: null
+  mcp_endpoint: null
+  provider_id: code-interpreter
+  toolgroup_id: builtin::code_interpreter
+- args: null
+  mcp_endpoint: null
+  provider_id: wolfram-alpha
+  toolgroup_id: builtin::wolfram_alpha
+vector_dbs: []
+version: '2'
+
+"agent.agent_config = {'model': 'llama3.2:1b-instruct-fp16', 'instructions': 'You are a helpful assistant that can use tools to answer questions.', 'toolgroups': [], 'client_tools': [{'name': 'google_search', 'description': 'Searches Google for the given query and returns snippets from the results.', 'parameters': [], 'metadata': {}, 'tool_prompt_format': 'python_list'}], 'sampling_params': {'strategy': {'type': 'top_p', 'temperature': 1.0, 'top_p': 0.9}}}"
+NOTE: --verbose turned on automatically when --streaming used.
+A chat agent example app using streaming responses:
+Enter your prompts. When finished, enter a blank line, 'q', 'quit', or ^D.
+Examples (enter the number to try them):
+ 1: When did Pope Francis die?
+ 2: Use google search to determine when Pope Francis died.
+ 3: What is the current weather in Chicago?
+> 1
+Using example prompt> When did Pope Francis die?
+Generator response...
+AgentTurnResponseStreamChunk(
+│   event=TurnResponseEvent(
+│   │   payload=AgentTurnResponseStepStartPayload(
+│   │   │   event_type='step_start',
+│   │   │   step_id='b5bea401-c5fa-4f38-8736-46c39d318e04',
+│   │   │   step_type='inference',
+│   │   │   metadata={}
+│   │   )
+│   )
+)
+AgentTurnResponseStreamChunk(
+│   event=TurnResponseEvent(
+│   │   payload=AgentTurnResponseStepProgressPayload(
+│   │   │   delta=TextDelta(text='[', type='text'),
+│   │   │   event_type='step_progress',
+│   │   │   step_id='b5bea401-c5fa-4f38-8736-46c39d318e04',
+│   │   │   step_type='inference'
+│   │   )
+│   )
+)
+AgentTurnResponseStreamChunk(
+│   event=TurnResponseEvent(
+│   │   payload=AgentTurnResponseStepProgressPayload(
+│   │   │   delta=TextDelta(text='google', type='text'),
+│   │   │   event_type='step_progress',
+│   │   │   step_id='b5bea401-c5fa-4f38-8736-46c39d318e04',
+│   │   │   step_type='inference'
+│   │   )
+│   )
+)
+AgentTurnResponseStreamChunk(
+│   event=TurnResponseEvent(
+│   │   payload=AgentTurnResponseStepProgressPayload(
+│   │   │   delta=TextDelta(text='_search', type='text'),
+│   │   │   event_type='step_progress',
+│   │   │   step_id='b5bea401-c5fa-4f38-8736-46c39d318e04',
+│   │   │   step_type='inference'
+│   │   )
+│   )
+)
+AgentTurnResponseStreamChunk(
+│   event=TurnResponseEvent(
+│   │   payload=AgentTurnResponseStepProgressPayload(
+│   │   │   delta=TextDelta(text='(params', type='text'),
+│   │   │   event_type='step_progress',
+│   │   │   step_id='b5bea401-c5fa-4f38-8736-46c39d318e04',
+│   │   │   step_type='inference'
+│   │   )
+│   )
+)
+AgentTurnResponseStreamChunk(
+│   event=TurnResponseEvent(
+│   │   payload=AgentTurnResponseStepProgressPayload(
+│   │   │   delta=TextDelta(text='={"', type='text'),
+│   │   │   event_type='step_progress',
+│   │   │   step_id='b5bea401-c5fa-4f38-8736-46c39d318e04',
+│   │   │   step_type='inference'
+│   │   )
+│   )
+)
+AgentTurnResponseStreamChunk(
+│   event=TurnResponseEvent(
+│   │   payload=AgentTurnResponseStepProgressPayload(
+│   │   │   delta=TextDelta(text='query', type='text'),
+│   │   │   event_type='step_progress',
+│   │   │   step_id='b5bea401-c5fa-4f38-8736-46c39d318e04',
+│   │   │   step_type='inference'
+│   │   )
+│   )
+)
+AgentTurnResponseStreamChunk(
+│   event=TurnResponseEvent(
+│   │   payload=AgentTurnResponseStepProgressPayload(
+│   │   │   delta=TextDelta(text='":', type='text'),
+│   │   │   event_type='step_progress',
+│   │   │   step_id='b5bea401-c5fa-4f38-8736-46c39d318e04',
+│   │   │   step_type='inference'
+│   │   )
+│   )
+)
+AgentTurnResponseStreamChunk(
+│   event=TurnResponseEvent(
+│   │   payload=AgentTurnResponseStepProgressPayload(
+│   │   │   delta=TextDelta(text=' "', type='text'),
+│   │   │   event_type='step_progress',
+│   │   │   step_id='b5bea401-c5fa-4f38-8736-46c39d318e04',
+│   │   │   step_type='inference'
+│   │   )
+│   )
+)
+AgentTurnResponseStreamChunk(
+│   event=TurnResponseEvent(
+│   │   payload=AgentTurnResponseStepProgressPayload(
+│   │   │   delta=TextDelta(text='P', type='text'),
+│   │   │   event_type='step_progress',
+│   │   │   step_id='b5bea401-c5fa-4f38-8736-46c39d318e04',
+│   │   │   step_type='inference'
+│   │   )
+│   )
+)
+AgentTurnResponseStreamChunk(
+│   event=TurnResponseEvent(
+│   │   payload=AgentTurnResponseStepProgressPayload(
+│   │   │   delta=TextDelta(text='ope', type='text'),
+│   │   │   event_type='step_progress',
+│   │   │   step_id='b5bea401-c5fa-4f38-8736-46c39d318e04',
+│   │   │   step_type='inference'
+│   │   )
+│   )
+)
+AgentTurnResponseStreamChunk(
+│   event=TurnResponseEvent(
+│   │   payload=AgentTurnResponseStepProgressPayload(
+│   │   │   delta=TextDelta(text=' Francis', type='text'),
+│   │   │   event_type='step_progress',
+│   │   │   step_id='b5bea401-c5fa-4f38-8736-46c39d318e04',
+│   │   │   step_type='inference'
+│   │   )
+│   )
+)
+AgentTurnResponseStreamChunk(
+│   event=TurnResponseEvent(
+│   │   payload=AgentTurnResponseStepProgressPayload(
+│   │   │   delta=TextDelta(text=' death', type='text'),
+│   │   │   event_type='step_progress',
+│   │   │   step_id='b5bea401-c5fa-4f38-8736-46c39d318e04',
+│   │   │   step_type='inference'
+│   │   )
+│   )
+)
+AgentTurnResponseStreamChunk(
+│   event=TurnResponseEvent(
+│   │   payload=AgentTurnResponseStepProgressPayload(
+│   │   │   delta=TextDelta(text=' date', type='text'),
+│   │   │   event_type='step_progress',
+│   │   │   step_id='b5bea401-c5fa-4f38-8736-46c39d318e04',
+│   │   │   step_type='inference'
+│   │   )
+│   )
+)
+AgentTurnResponseStreamChunk(
+│   event=TurnResponseEvent(
+│   │   payload=AgentTurnResponseStepProgressPayload(
+│   │   │   delta=TextDelta(text='"})', type='text'),
+│   │   │   event_type='step_progress',
+│   │   │   step_id='b5bea401-c5fa-4f38-8736-46c39d318e04',
+│   │   │   step_type='inference'
+│   │   )
+│   )
+)
+AgentTurnResponseStreamChunk(
+│   event=TurnResponseEvent(
+│   │   payload=AgentTurnResponseStepProgressPayload(
+│   │   │   delta=TextDelta(text=']', type='text'),
+│   │   │   event_type='step_progress',
+│   │   │   step_id='b5bea401-c5fa-4f38-8736-46c39d318e04',
+│   │   │   step_type='inference'
+│   │   )
+│   )
+)
+AgentTurnResponseStreamChunk(
+│   event=TurnResponseEvent(
+│   │   payload=AgentTurnResponseStepProgressPayload(
+│   │   │   delta=ToolCallDelta(
+│   │   │   │   parse_status='succeeded',
+│   │   │   │   tool_call=ToolCall(
+│   │   │   │   │   arguments={'params': {'query': 'Pope Francis death date'}},
+│   │   │   │   │   call_id='206e2193-03de-465c-9c11-8e29b5a31a55',
+│   │   │   │   │   tool_name='google_search',
+│   │   │   │   │   arguments_json='{"params": {"query": "Pope Francis death date"}}'
+│   │   │   │   ),
+│   │   │   │   type='tool_call'
+│   │   │   ),
+│   │   │   event_type='step_progress',
+│   │   │   step_id='b5bea401-c5fa-4f38-8736-46c39d318e04',
+│   │   │   step_type='inference'
+│   │   )
+│   )
+)
+AgentTurnResponseStreamChunk(
+│   event=TurnResponseEvent(
+│   │   payload=AgentTurnResponseStepCompletePayload(
+│   │   │   event_type='step_complete',
+│   │   │   step_details=InferenceStep(
+│   │   │   │   api_model_response=CompletionMessage(
+│   │   │   │   │   content='',
+│   │   │   │   │   role='assistant',
+│   │   │   │   │   stop_reason='end_of_turn',
+│   │   │   │   │   tool_calls=[
+│   │   │   │   │   │   ToolCall(
+│   │   │   │   │   │   │   arguments={'params': {'query': 'Pope Francis death date'}},
+│   │   │   │   │   │   │   call_id='206e2193-03de-465c-9c11-8e29b5a31a55',
+│   │   │   │   │   │   │   tool_name='google_search',
+│   │   │   │   │   │   │   arguments_json='{"params": {"query": "Pope Francis death date"}}'
+│   │   │   │   │   │   )
+│   │   │   │   │   ]
+│   │   │   │   ),
+│   │   │   │   step_id='b5bea401-c5fa-4f38-8736-46c39d318e04',
+│   │   │   │   step_type='inference',
+│   │   │   │   turn_id='4da4d48a-8905-4cb0-912e-789beaee4612',
+│   │   │   │   completed_at=datetime.datetime(2025, 4, 24, 21, 37, 40, 588952, tzinfo=TzInfo(UTC)),
+│   │   │   │   started_at=datetime.datetime(2025, 4, 24, 21, 37, 40, 337027, tzinfo=TzInfo(UTC))
+│   │   │   ),
+│   │   │   step_id='b5bea401-c5fa-4f38-8736-46c39d318e04',
+│   │   │   step_type='inference'
+│   │   )
+│   )
+)
+AgentTurnResponseStreamChunk(
+│   event=TurnResponseEvent(
+│   │   payload=AgentTurnResponseTurnAwaitingInputPayload(
+│   │   │   event_type='turn_awaiting_input',
+│   │   │   turn=Turn(
+│   │   │   │   input_messages=[UserMessage(content='When did Pope Francis die?', role='user', context=None)],
+│   │   │   │   output_message=CompletionMessage(
+│   │   │   │   │   content='',
+│   │   │   │   │   role='assistant',
+│   │   │   │   │   stop_reason='end_of_message',
+│   │   │   │   │   tool_calls=[
+│   │   │   │   │   │   ToolCall(
+│   │   │   │   │   │   │   arguments={'params': {'query': 'Pope Francis death date'}},
+│   │   │   │   │   │   │   call_id='206e2193-03de-465c-9c11-8e29b5a31a55',
+│   │   │   │   │   │   │   tool_name='google_search',
+│   │   │   │   │   │   │   arguments_json='{"params": {"query": "Pope Francis death date"}}'
+│   │   │   │   │   │   )
+│   │   │   │   │   ]
+│   │   │   │   ),
+│   │   │   │   session_id='4765e978-04ff-45ac-9a64-ad87afba9e9e',
+│   │   │   │   started_at=datetime.datetime(2025, 4, 24, 21, 37, 40, 336932, tzinfo=TzInfo(UTC)),
+│   │   │   │   steps=[
+│   │   │   │   │   InferenceStep(
+│   │   │   │   │   │   api_model_response=CompletionMessage(
+│   │   │   │   │   │   │   content='',
+│   │   │   │   │   │   │   role='assistant',
+│   │   │   │   │   │   │   stop_reason='end_of_turn',
+│   │   │   │   │   │   │   tool_calls=[
+│   │   │   │   │   │   │   │   ToolCall(
+│   │   │   │   │   │   │   │   │   arguments={'params': {'query': 'Pope Francis death date'}},
+│   │   │   │   │   │   │   │   │   call_id='206e2193-03de-465c-9c11-8e29b5a31a55',
+│   │   │   │   │   │   │   │   │   tool_name='google_search',
+│   │   │   │   │   │   │   │   │   arguments_json='{"params": {"query": "Pope Francis death date"}}'
+│   │   │   │   │   │   │   │   )
+│   │   │   │   │   │   │   ]
+│   │   │   │   │   │   ),
+│   │   │   │   │   │   step_id='b5bea401-c5fa-4f38-8736-46c39d318e04',
+│   │   │   │   │   │   step_type='inference',
+│   │   │   │   │   │   turn_id='4da4d48a-8905-4cb0-912e-789beaee4612',
+│   │   │   │   │   │   completed_at=datetime.datetime(2025, 4, 24, 21, 37, 40, 588952, tzinfo=TzInfo(UTC)),
+│   │   │   │   │   │   started_at=datetime.datetime(2025, 4, 24, 21, 37, 40, 337027, tzinfo=TzInfo(UTC))
+│   │   │   │   │   )
+│   │   │   │   ],
+│   │   │   │   turn_id='4da4d48a-8905-4cb0-912e-789beaee4612',
+│   │   │   │   completed_at=datetime.datetime(2025, 4, 24, 21, 37, 40, 595513, tzinfo=TzInfo(UTC)),
+│   │   │   │   output_attachments=[]
+│   │   │   )
+│   │   )
+│   )
+)
+AgentTurnResponseStreamChunk(
+│   event=TurnResponseEvent(
+│   │   payload=AgentTurnResponseStepCompletePayload(
+│   │   │   event_type='step_complete',
+│   │   │   step_details=ToolExecutionStep(
+│   │   │   │   step_id='b5bea401-c5fa-4f38-8736-46c39d318e04',
+│   │   │   │   step_type='tool_execution',
+│   │   │   │   tool_calls=[
+│   │   │   │   │   ToolCall(
+│   │   │   │   │   │   arguments={'params': {'query': 'Pope Francis death date'}},
+│   │   │   │   │   │   call_id='206e2193-03de-465c-9c11-8e29b5a31a55',
+│   │   │   │   │   │   tool_name='google_search',
+│   │   │   │   │   │   arguments_json='{"params": {"query": "Pope Francis death date"}}'
+│   │   │   │   │   )
+│   │   │   │   ],
+│   │   │   │   tool_responses=[
+│   │   │   │   │   ToolResponse(
+│   │   │   │   │   │   call_id='206e2193-03de-465c-9c11-8e29b5a31a55',
+│   │   │   │   │   │   content="Error when running tool: GoogleSearch.fn() got an unexpected keyword argument 'params'",
+│   │   │   │   │   │   tool_name='google_search',
+│   │   │   │   │   │   metadata={}
+│   │   │   │   │   )
+│   │   │   │   ],
+│   │   │   │   turn_id='4da4d48a-8905-4cb0-912e-789beaee4612',
+│   │   │   │   completed_at=datetime.datetime(2025, 4, 24, 21, 37, 40, 612613, tzinfo=TzInfo(UTC)),
+│   │   │   │   started_at=datetime.datetime(2025, 4, 24, 21, 37, 40, 595246, tzinfo=TzInfo(UTC))
+│   │   │   ),
+│   │   │   step_id='b5bea401-c5fa-4f38-8736-46c39d318e04',
+│   │   │   step_type='tool_execution'
+│   │   )
+│   )
+)
+AgentTurnResponseStreamChunk(
+│   event=TurnResponseEvent(
+│   │   payload=AgentTurnResponseStepStartPayload(
+│   │   │   event_type='step_start',
+│   │   │   step_id='3e072c32-d5ed-4cfc-9fb0-3b066ed8ab05',
+│   │   │   step_type='inference',
+│   │   │   metadata={}
+│   │   )
+│   )
+)
+AgentTurnResponseStreamChunk(
+│   event=TurnResponseEvent(
+│   │   payload=AgentTurnResponseStepProgressPayload(
+│   │   │   delta=TextDelta(text='I', type='text'),
+│   │   │   event_type='step_progress',
+│   │   │   step_id='3e072c32-d5ed-4cfc-9fb0-3b066ed8ab05',
+│   │   │   step_type='inference'
+│   │   )
+│   )
+)
+AgentTurnResponseStreamChunk(
+│   event=TurnResponseEvent(
+│   │   payload=AgentTurnResponseStepProgressPayload(
+│   │   │   delta=TextDelta(text=' am', type='text'),
+│   │   │   event_type='step_progress',
+│   │   │   step_id='3e072c32-d5ed-4cfc-9fb0-3b066ed8ab05',
+│   │   │   step_type='inference'
+│   │   )
+│   )
+)
+AgentTurnResponseStreamChunk(
+│   event=TurnResponseEvent(
+│   │   payload=AgentTurnResponseStepProgressPayload(
+│   │   │   delta=TextDelta(text=' not', type='text'),
+│   │   │   event_type='step_progress',
+│   │   │   step_id='3e072c32-d5ed-4cfc-9fb0-3b066ed8ab05',
+│   │   │   step_type='inference'
+│   │   )
+│   )
+)
+AgentTurnResponseStreamChunk(
+│   event=TurnResponseEvent(
+│   │   payload=AgentTurnResponseStepProgressPayload(
+│   │   │   delta=TextDelta(text=' able', type='text'),
+│   │   │   event_type='step_progress',
+│   │   │   step_id='3e072c32-d5ed-4cfc-9fb0-3b066ed8ab05',
+│   │   │   step_type='inference'
+│   │   )
+│   )
+)
+AgentTurnResponseStreamChunk(
+│   event=TurnResponseEvent(
+│   │   payload=AgentTurnResponseStepProgressPayload(
+│   │   │   delta=TextDelta(text=' to', type='text'),
+│   │   │   event_type='step_progress',
+│   │   │   step_id='3e072c32-d5ed-4cfc-9fb0-3b066ed8ab05',
+│   │   │   step_type='inference'
+│   │   )
+│   )
+)
+AgentTurnResponseStreamChunk(
+│   event=TurnResponseEvent(
+│   │   payload=AgentTurnResponseStepProgressPayload(
+│   │   │   delta=TextDelta(text=' provide', type='text'),
+│   │   │   event_type='step_progress',
+│   │   │   step_id='3e072c32-d5ed-4cfc-9fb0-3b066ed8ab05',
+│   │   │   step_type='inference'
+│   │   )
+│   )
+)
+AgentTurnResponseStreamChunk(
+│   event=TurnResponseEvent(
+│   │   payload=AgentTurnResponseStepProgressPayload(
+│   │   │   delta=TextDelta(text=' the', type='text'),
+│   │   │   event_type='step_progress',
+│   │   │   step_id='3e072c32-d5ed-4cfc-9fb0-3b066ed8ab05',
+│   │   │   step_type='inference'
+│   │   )
+│   )
+)
+AgentTurnResponseStreamChunk(
+│   event=TurnResponseEvent(
+│   │   payload=AgentTurnResponseStepProgressPayload(
+│   │   │   delta=TextDelta(text=' answer', type='text'),
+│   │   │   event_type='step_progress',
+│   │   │   step_id='3e072c32-d5ed-4cfc-9fb0-3b066ed8ab05',
+│   │   │   step_type='inference'
+│   │   )
+│   )
+)
+AgentTurnResponseStreamChunk(
+│   event=TurnResponseEvent(
+│   │   payload=AgentTurnResponseStepProgressPayload(
+│   │   │   delta=TextDelta(text=' as', type='text'),
+│   │   │   event_type='step_progress',
+│   │   │   step_id='3e072c32-d5ed-4cfc-9fb0-3b066ed8ab05',
+│   │   │   step_type='inference'
+│   │   )
+│   )
+)
+AgentTurnResponseStreamChunk(
+│   event=TurnResponseEvent(
+│   │   payload=AgentTurnResponseStepProgressPayload(
+│   │   │   delta=TextDelta(text=' there', type='text'),
+│   │   │   event_type='step_progress',
+│   │   │   step_id='3e072c32-d5ed-4cfc-9fb0-3b066ed8ab05',
+│   │   │   step_type='inference'
+│   │   )
+│   )
+)
+AgentTurnResponseStreamChunk(
+│   event=TurnResponseEvent(
+│   │   payload=AgentTurnResponseStepProgressPayload(
+│   │   │   delta=TextDelta(text=' is', type='text'),
+│   │   │   event_type='step_progress',
+│   │   │   step_id='3e072c32-d5ed-4cfc-9fb0-3b066ed8ab05',
+│   │   │   step_type='inference'
+│   │   )
+│   )
+)
+AgentTurnResponseStreamChunk(
+│   event=TurnResponseEvent(
+│   │   payload=AgentTurnResponseStepProgressPayload(
+│   │   │   delta=TextDelta(text=' no', type='text'),
+│   │   │   event_type='step_progress',
+│   │   │   step_id='3e072c32-d5ed-4cfc-9fb0-3b066ed8ab05',
+│   │   │   step_type='inference'
+│   │   )
+│   )
+)
+AgentTurnResponseStreamChunk(
+│   event=TurnResponseEvent(
+│   │   payload=AgentTurnResponseStepProgressPayload(
+│   │   │   delta=TextDelta(text=' known', type='text'),
+│   │   │   event_type='step_progress',
+│   │   │   step_id='3e072c32-d5ed-4cfc-9fb0-3b066ed8ab05',
+│   │   │   step_type='inference'
+│   │   )
+│   )
+)
+AgentTurnResponseStreamChunk(
+│   event=TurnResponseEvent(
+│   │   payload=AgentTurnResponseStepProgressPayload(
+│   │   │   delta=TextDelta(text=' information', type='text'),
+│   │   │   event_type='step_progress',
+│   │   │   step_id='3e072c32-d5ed-4cfc-9fb0-3b066ed8ab05',
+│   │   │   step_type='inference'
+│   │   )
+│   )
+)
+AgentTurnResponseStreamChunk(
+│   event=TurnResponseEvent(
+│   │   payload=AgentTurnResponseStepProgressPayload(
+│   │   │   delta=TextDelta(text=' of', type='text'),
+│   │   │   event_type='step_progress',
+│   │   │   step_id='3e072c32-d5ed-4cfc-9fb0-3b066ed8ab05',
+│   │   │   step_type='inference'
+│   │   )
+│   )
+)
+AgentTurnResponseStreamChunk(
+│   event=TurnResponseEvent(
+│   │   payload=AgentTurnResponseStepProgressPayload(
+│   │   │   delta=TextDelta(text=' a', type='text'),
+│   │   │   event_type='step_progress',
+│   │   │   step_id='3e072c32-d5ed-4cfc-9fb0-3b066ed8ab05',
+│   │   │   step_type='inference'
+│   │   )
+│   )
+)
+AgentTurnResponseStreamChunk(
+│   event=TurnResponseEvent(
+│   │   payload=AgentTurnResponseStepProgressPayload(
+│   │   │   delta=TextDelta(text=' Pope', type='text'),
+│   │   │   event_type='step_progress',
+│   │   │   step_id='3e072c32-d5ed-4cfc-9fb0-3b066ed8ab05',
+│   │   │   step_type='inference'
+│   │   )
+│   )
+)
+AgentTurnResponseStreamChunk(
+│   event=TurnResponseEvent(
+│   │   payload=AgentTurnResponseStepProgressPayload(
+│   │   │   delta=TextDelta(text=' named', type='text'),
+│   │   │   event_type='step_progress',
+│   │   │   step_id='3e072c32-d5ed-4cfc-9fb0-3b066ed8ab05',
+│   │   │   step_type='inference'
+│   │   )
+│   )
+)
+AgentTurnResponseStreamChunk(
+│   event=TurnResponseEvent(
+│   │   payload=AgentTurnResponseStepProgressPayload(
+│   │   │   delta=TextDelta(text=' Francis', type='text'),
+│   │   │   event_type='step_progress',
+│   │   │   step_id='3e072c32-d5ed-4cfc-9fb0-3b066ed8ab05',
+│   │   │   step_type='inference'
+│   │   )
+│   )
+)
+AgentTurnResponseStreamChunk(
+│   event=TurnResponseEvent(
+│   │   payload=AgentTurnResponseStepProgressPayload(
+│   │   │   delta=TextDelta(text='.', type='text'),
+│   │   │   event_type='step_progress',
+│   │   │   step_id='3e072c32-d5ed-4cfc-9fb0-3b066ed8ab05',
+│   │   │   step_type='inference'
+│   │   )
+│   )
+)
+AgentTurnResponseStreamChunk(
+│   event=TurnResponseEvent(
+│   │   payload=AgentTurnResponseStepCompletePayload(
+│   │   │   event_type='step_complete',
+│   │   │   step_details=InferenceStep(
+│   │   │   │   api_model_response=CompletionMessage(
+│   │   │   │   │   content='I am not able to provide the answer as there is no known information of a Pope named Francis.',
+│   │   │   │   │   role='assistant',
+│   │   │   │   │   stop_reason='end_of_turn',
+│   │   │   │   │   tool_calls=[]
+│   │   │   │   ),
+│   │   │   │   step_id='3e072c32-d5ed-4cfc-9fb0-3b066ed8ab05',
+│   │   │   │   step_type='inference',
+│   │   │   │   turn_id='4da4d48a-8905-4cb0-912e-789beaee4612',
+│   │   │   │   completed_at=datetime.datetime(2025, 4, 24, 21, 37, 40, 925331, tzinfo=TzInfo(UTC)),
+│   │   │   │   started_at=datetime.datetime(2025, 4, 24, 21, 37, 40, 617103, tzinfo=TzInfo(UTC))
+│   │   │   ),
+│   │   │   step_id='3e072c32-d5ed-4cfc-9fb0-3b066ed8ab05',
+│   │   │   step_type='inference'
+│   │   )
+│   )
+)
+AgentTurnResponseStreamChunk(
+│   event=TurnResponseEvent(
+│   │   payload=AgentTurnResponseTurnCompletePayload(
+│   │   │   event_type='turn_complete',
+│   │   │   turn=Turn(
+│   │   │   │   input_messages=[UserMessage(content='When did Pope Francis die?', role='user', context=None)],
+│   │   │   │   output_message=CompletionMessage(
+│   │   │   │   │   content='I am not able to provide the answer as there is no known information of a Pope named Francis.',
+│   │   │   │   │   role='assistant',
+│   │   │   │   │   stop_reason='end_of_turn',
+│   │   │   │   │   tool_calls=[]
+│   │   │   │   ),
+│   │   │   │   session_id='4765e978-04ff-45ac-9a64-ad87afba9e9e',
+│   │   │   │   started_at=datetime.datetime(2025, 4, 24, 21, 37, 40, 336932, tzinfo=TzInfo(UTC)),
+│   │   │   │   steps=[
+│   │   │   │   │   InferenceStep(
+│   │   │   │   │   │   api_model_response=CompletionMessage(
+│   │   │   │   │   │   │   content='',
+│   │   │   │   │   │   │   role='assistant',
+│   │   │   │   │   │   │   stop_reason='end_of_turn',
+│   │   │   │   │   │   │   tool_calls=[
+│   │   │   │   │   │   │   │   ToolCall(
+│   │   │   │   │   │   │   │   │   arguments={'params': {'query': 'Pope Francis death date'}},
+│   │   │   │   │   │   │   │   │   call_id='206e2193-03de-465c-9c11-8e29b5a31a55',
+│   │   │   │   │   │   │   │   │   tool_name='google_search',
+│   │   │   │   │   │   │   │   │   arguments_json='{"params": {"query": "Pope Francis death date"}}'
+│   │   │   │   │   │   │   │   )
+│   │   │   │   │   │   │   ]
+│   │   │   │   │   │   ),
+│   │   │   │   │   │   step_id='b5bea401-c5fa-4f38-8736-46c39d318e04',
+│   │   │   │   │   │   step_type='inference',
+│   │   │   │   │   │   turn_id='4da4d48a-8905-4cb0-912e-789beaee4612',
+│   │   │   │   │   │   completed_at=datetime.datetime(2025, 4, 24, 21, 37, 40, 588952, tzinfo=TzInfo(UTC)),
+│   │   │   │   │   │   started_at=datetime.datetime(2025, 4, 24, 21, 37, 40, 337027, tzinfo=TzInfo(UTC))
+│   │   │   │   │   ),
+│   │   │   │   │   ToolExecutionStep(
+│   │   │   │   │   │   step_id='b5bea401-c5fa-4f38-8736-46c39d318e04',
+│   │   │   │   │   │   step_type='tool_execution',
+│   │   │   │   │   │   tool_calls=[
+│   │   │   │   │   │   │   ToolCall(
+│   │   │   │   │   │   │   │   arguments={'params': {'query': 'Pope Francis death date'}},
+│   │   │   │   │   │   │   │   call_id='206e2193-03de-465c-9c11-8e29b5a31a55',
+│   │   │   │   │   │   │   │   tool_name='google_search',
+│   │   │   │   │   │   │   │   arguments_json='{"params": {"query": "Pope Francis death date"}}'
+│   │   │   │   │   │   │   )
+│   │   │   │   │   │   ],
+│   │   │   │   │   │   tool_responses=[
+│   │   │   │   │   │   │   ToolResponse(
+│   │   │   │   │   │   │   │   call_id='206e2193-03de-465c-9c11-8e29b5a31a55',
+│   │   │   │   │   │   │   │   content="Error when running tool: GoogleSearch.fn() got an unexpected keyword argument 'params'",
+│   │   │   │   │   │   │   │   tool_name='google_search',
+│   │   │   │   │   │   │   │   metadata={}
+│   │   │   │   │   │   │   )
+│   │   │   │   │   │   ],
+│   │   │   │   │   │   turn_id='4da4d48a-8905-4cb0-912e-789beaee4612',
+│   │   │   │   │   │   completed_at=datetime.datetime(2025, 4, 24, 21, 37, 40, 612613, tzinfo=TzInfo(UTC)),
+│   │   │   │   │   │   started_at=datetime.datetime(2025, 4, 24, 21, 37, 40, 595246, tzinfo=TzInfo(UTC))
+│   │   │   │   │   ),
+│   │   │   │   │   InferenceStep(
+│   │   │   │   │   │   api_model_response=CompletionMessage(
+│   │   │   │   │   │   │   content='I am not able to provide the answer as there is no known information of a Pope named Francis.',
+│   │   │   │   │   │   │   role='assistant',
+│   │   │   │   │   │   │   stop_reason='end_of_turn',
+│   │   │   │   │   │   │   tool_calls=[]
+│   │   │   │   │   │   ),
+│   │   │   │   │   │   step_id='3e072c32-d5ed-4cfc-9fb0-3b066ed8ab05',
+│   │   │   │   │   │   step_type='inference',
+│   │   │   │   │   │   turn_id='4da4d48a-8905-4cb0-912e-789beaee4612',
+│   │   │   │   │   │   completed_at=datetime.datetime(2025, 4, 24, 21, 37, 40, 925331, tzinfo=TzInfo(UTC)),
+│   │   │   │   │   │   started_at=datetime.datetime(2025, 4, 24, 21, 37, 40, 617103, tzinfo=TzInfo(UTC))
+│   │   │   │   │   )
+│   │   │   │   ],
+│   │   │   │   turn_id='4da4d48a-8905-4cb0-912e-789beaee4612',
+│   │   │   │   completed_at=datetime.datetime(2025, 4, 24, 21, 37, 40, 930123, tzinfo=TzInfo(UTC)),
+│   │   │   │   output_attachments=[]
+│   │   │   )
+│   │   )
+│   )
+)
+ Skipping logging of the 'response'.
+Enter your prompts. When finished, enter a blank line, 'q', 'quit', or ^D.
+Examples (enter the number to try them):
+ 1: When did Pope Francis die?
+ 2: Use google search to determine when Pope Francis died.
+ 3: What is the current weather in Chicago?
+> q
+Finished!
+```
+
