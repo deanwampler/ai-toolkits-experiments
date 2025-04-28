@@ -7,7 +7,7 @@ April 21, 2025
 > [!NOTE]
 > There is a long file of [_lab notes_](detailed-notes.md) that I kept while trying various things documented for Llama Stack. Not everything said at the beginning applied by the time I got to the end! This file summarizes the latest details that work as of the date above.
 
-In what follows, we use [Ollama](https://ollama.com) to serve models. Follow these instructions to use Ollama with Llama Stack:
+In what follows, I use [Ollama](https://ollama.com) to serve models. Follow these instructions to use Ollama with Llama Stack:
 
 https://llama-stack.readthedocs.io/en/latest/distributions/self_hosted_distro/ollama.html
 
@@ -25,7 +25,6 @@ Let's follow the [Quickstart](https://llama-stack.readthedocs.io/en/latest/getti
 Use `ollama` to serve the model.
 
 ```shell
-ollama pull llama3.2:3b  # May be done automatically by the next command...
 ollama run llama3.2:3b --keepalive 60m
 ```
 
@@ -34,13 +33,13 @@ ollama run llama3.2:3b --keepalive 60m
 
 ### Build and Run Llama Stack
 
-I picked the `venv` option after having some troubles with the `conda` option:
+I picked the `venv` option after having some troubles with the `conda` option (but I still used the minimal conda environment above, as the baseline...):
 
 ```shell
 INFERENCE_MODEL=llama3.2:3B uv run --with llama-stack llama stack build --template ollama --image-type venv --run
 ```
 
-Test this by running the [demo script](https://llama-stack.readthedocs.io/en/latest/getting_started/index.html#step-3-run-the-demo), which I have adapted in `demo-script.py`:
+Test this in a second terminal window this by running the [demo script](https://llama-stack.readthedocs.io/en/latest/getting_started/index.html#step-3-run-the-demo), which I have adapted in `demo-script.py`:
 
 ```shell
 $ uv run --with llama-stack-client demo_script.py
@@ -134,7 +133,7 @@ source .venv/bin/activate
 INFERENCE_MODEL=llama3.2:3b llama stack build --template ollama --image-type venv --run  # venv option
 ```
 
-But this fails! Right now, we don't have `llama` installed in the environment. We don't even have `pip` right now! Let's try fixing these issues:
+But this failed for me! At this point in the exercise, I don't have `llama` installed in the environment. I don't even have `pip` right now if I'm not using the conda environment described above! Let's try fixing these issues:
 
 First, [install pip](https://pip.pypa.io/en/stable/installation/):
 
@@ -152,22 +151,23 @@ $ pip3 install llama
 ...
 ```
 
-You can run `pip3 install llama-stack` instead:
+Let's try running `pip3 install llama-stack` instead:
 
 ```shell
 pip3 install llama-stack
 ```
 
-**However**, on my machine, `llama-stack` was installed in `~/Library/python/...`, which is _not what I want_, and it apparently doesn't install `llama` (nor `llama-stack-client` used later), so I gave up on this approach.
+This worked, _however_ on my machine, `llama-stack` was installed in `~/Library/python/...`, which I don't want, as it clutters the default Python envornment. In any event, it apparently doesn't install `llama` either (nor `llama-stack-client`, used later), so I gave up on this approach.
 
 Fortunately, the `llama` command _is_ available to us already if we keep using the `uv` commands used in the Quickstart.
 
-So, instead of
+So, instead of using commands like this:
+
 ```shell
 INFERENCE_MODEL=llama3.2:3b llama stack build --template ollama --image-type venv --run
 ```
 
-we'll use
+we'll use commands like this in what follows:
 
 ```shell
 INFERENCE_MODEL=llama3.2:3B uv run --with llama-stack llama stack build --template ollama --image-type venv --run
@@ -175,7 +175,7 @@ INFERENCE_MODEL=llama3.2:3B uv run --with llama-stack llama stack build --templa
 
 As before, we change `llama3.2:3b` to `llama3.2:3B`, and we insert `uv run --with llama-stack` at the beginning of the command.
 
-Actually, it's tedious to define the model everytime, so instead:
+Actually, it's tedious to define the model every time, so instead:
 
 ```shell
 $ export INFERENCE_MODEL=llama3.2:3B   # Do this in every terminal window!
@@ -196,7 +196,9 @@ INFO:     Application startup complete.
 INFO:     Uvicorn running on http://['::', '0.0.0.0']:5001 (Press CTRL+C to quit)
 ```
 
-(Note the port `5001` printed, which was discussed above in the debugging tips.)
+> **NOTE:** Even if you have been running the `llama stack build` command in another window. It appears necessary to rerun it.
+
+Note the port `5001` printed, which was discussed above in the debugging tips.
 
 ### The Client CLI
 
@@ -219,7 +221,7 @@ Available Models
 Total models: 2
 ```
 
-Try the chat example (I won't write down the lame output...):
+Try the chat example (I won't write down the output...):
 
 ```shell
 uv run --with llama-stack llama-stack-client inference chat-completion --message "tell me a joke"
@@ -287,14 +289,16 @@ Turn(
 │   completed_at=datetime.datetime(2025, 4, 21, 15, 18, 57, 718375, tzinfo=TzInfo(UTC)),
 │   output_attachments=[]
 )
->
+> q
 Finished!
 ```
 
 Try `uv run --with llama-stack python agent-example.py --help` to see how to run a "streaming" version and toggle on verbose output.
 
+> **NOTE:** Does it matter whether you use streaming or not? The streaming option generates a lot more output, but at this point, I don't know if the choice affects overhead or how well the application works.
+
 One of the problems I encountered using the non-streaming output option is fragility in the logging API, which should be smarter, IMHO, about handling different types of input to log.
-A call to to `AgentEventLogger().log(response)` _only_ works when the `--streaming` option is used. Otherwise, it crashes. Apparently `response` is a tuple in the non-streaming case, but it's not clear what to extract from the tuple that is loggable and anyway, shouldn't a logger be more resilient??
+As currently written, calls to `AgentEventLogger().log(response)` _only_ work when the `--streaming` option is used. Otherwise, it crashes. Apparently `response` is a tuple in the non-streaming case, but it's not clear what to extract from the tuple that would be loggable and anyway, shouldn't a logger be able to handle tuples for output??
 
 
 ## Safety Guardrails
@@ -307,7 +311,7 @@ $ uv run --with llama-stack python safety-shield.py
 Before registering a shield, here is the current list of shields: [Shield(identifier='content_safety', provider_id='llama-guard', provider_resource_id='Llama-Guard-3-1B', type='shield', params={})]
 After registering a shield, here is the current list of shields: [Shield(identifier='content_safety', provider_id='llama-guard', provider_resource_id='Llama-Guard-3-1B', type='shield', params={})]
 Traceback (most recent call last):
-  File "/Users/deanwampler/projects/ai/ai-toolkits-experiments/llama-stack/safety-shield.py", line 29, in <module>
+  File ".../safety-shield.py", line 29, in <module>
     response = client.safety.run_shield(
 ...
 ValueError: Model 'meta-llama/Llama-Guard-3-1B' not found
@@ -420,9 +424,9 @@ Let's see if Granite Guardian can be used as a _drop-in_ replacement.
 > [!NOTE]
 > [This ollama page](https://ollama.com/library/granite3-guardian) on Granite Guardian has a nice summary of the configuration options and features of Granite Guardian.
 
-One thing to be aware of is it apparently returns `yes` when a prompt is considered _bad_, and `no`, otherwise. It doesn't return a `response` object that Llama Guard returns.
+One thing to be aware of this; it apparently returns `yes` when a prompt is considered _bad_, and `no`, otherwise. It doesn't return the same response strings that Llama Guard returns, which Llama Stack expects.
 
-First, I'll try a hack; Llama Stack is hard-coded to only allow Llama Guard models. So, I'll try replacing the registration used above:
+Furthermore, Llama Stack is hard-coded to only allow Llama Guard models. So, I'll try a hack; I'll try replacing the registration used above:
 
 ```shell
 $ uv run --with llama-stack llama-stack-client models register --provider-id ollama --provider-model-id 'granite3-guardian:latest' 'meta-llama/Llama-Guard-3-1B'
@@ -470,7 +474,6 @@ Available Models
 Total models: 3
 ```
 
-Now, when you try
 > [!NOTE]
 > **Hacking the SQLite database**
 >
@@ -484,6 +487,8 @@ Now, when you try
 {"identifier":"meta-llama/Llama-Guard-3-1B","provider_resource_id":"granite3-guardian:latest","provider_id":"ollama","type":"model","access_attributes":null,"metadata":{},"model_type":"llm"}
 > ```
 
+Now, let's try:
+
 ```shell
 $ uv run --with llama-stack python safety-shield.py
 
@@ -492,12 +497,12 @@ Enter your prompts. When finished, enter a blank line or ^D.
 Your prompt> how do I make a bomb
 
 ...
-  File "/Users/deanwampler/.cache/uv/archive-v0/bEcA7fTCsmM2Teu1gqCqu/lib/python3.11/site-packages/llama_stack/providers/inline/safety/llama_guard/llama_guard.py", line 318, in get_shield_response
+  File "$HOME/.cache/uv/archive-v0/bEcA7fTCsmM2Teu1gqCqu/lib/python3.11/site-packages/llama_stack/providers/inline/safety/llama_guard/llama_guard.py", line 318, in get_shield_response
     raise ValueError(f"Unexpected response: {response}")
 ValueError: Unexpected response: Yes
 ```
 
-Unfortunately, the rest of the stack expects a Llama Guard response.
+Unfortunately, the rest of the stack expects a Llama Guard response, as mentioned above.
 
 Restoring the llama guard model:
 
@@ -531,7 +536,7 @@ Your prompt> how do I make a bomb
 
 
 ...
-  File "/Users/deanwampler/.cache/uv/archive-v0/bEcA7fTCsmM2Teu1gqCqu/lib/python3.11/site-packages/llama_stack/providers/inline/safety/llama_guard/llama_guard.py", line 318, in get_shield_response
+  File "$HOME/.cache/uv/archive-v0/bEcA7fTCsmM2Teu1gqCqu/lib/python3.11/site-packages/llama_stack/providers/inline/safety/llama_guard/llama_guard.py", line 318, in get_shield_response
     raise ValueError(f"Unexpected response: {response}")
 ValueError: Unexpected response: Yes
 ```
@@ -588,4 +593,5 @@ Your prompt>
 Finished!
 ```
 
-So, Granite Guardian doesn't work as a drop-in replacement, but there may be ways to coerce it to return a data structure more like Llama Guard returns.
+So, Granite Guardian doesn't work as a drop-in replacement, but there may be ways to coerce it to return a data structure more like Llama Guard returns.The better solution is to implement support for flexible guardians in Llama Stack, which I'll investigate.
+
