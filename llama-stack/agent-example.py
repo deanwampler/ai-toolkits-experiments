@@ -8,6 +8,7 @@ from termcolor import colored
 from types import GeneratorType
 from llama_stack_client import AgentEventLogger
 from llama_stack_client import Agent
+# from llama_stack_client.types.agents import TurnResponseEventPayload
 from rich import print
 from rich.pretty import pprint
 from rich.pretty import Pretty
@@ -108,9 +109,9 @@ if args.verbose:
     panel = Panel(pretty)
     print(panel)
 
-if args.streaming and not args.verbose:
-    print("NOTE: --verbose turned on automatically when --streaming used.")
-    args.verbose = True
+# if args.streaming and not args.verbose:
+#     print("NOTE: --verbose turned on automatically when --streaming used.")
+#     args.verbose = True
 
 def format_response(response) -> Pretty:
     return f"""
@@ -133,31 +134,50 @@ def do_log(response):
     for log in AgentEventLogger().log(response):
         log.print()
 
-def pp_response(response):
-    if isinstance(response, GeneratorType):
-        if args.verbose:
-            print("Generator response...")
-        for res in response:
-            if args.verbose:
-                pprint(res)
-            else:
-                pprint(res.event.payload.tool_call)
-    else:
-        if args.verbose:
-            print("Non-generator response...")
-        pprint(response)
+class ResponsePrinter():
+    step_progress_str = ""
+    in_step_progress  = False
 
-def log_response(response):
-    if args.verbose:
-        print(f" Skipping logging of the 'response'.")
-        # It seems that the logging API should be smarter about handling different types of input.
-        # The following _only_ works when the --streaming option is used. Otherwise, it crashes 
-        # in the call above to AgentEventLogger().log(response)
-        # if isinstance(response, GeneratorType):
-        #     for res in response:
-        #         do_log(res)
-        # else:
-        #     do_log(response)
+    def print(response):
+        if isinstance(response, GeneratorType):
+            if args.verbose:
+                print("Generator response...")
+            for res in response:
+                if args.verbose:
+                    pprint(res)
+                else:
+                    # if isinstance(res, AgentTurnResponseStepProgressPayload):
+                    if res.event.payload.event_type == "step_progress":
+                        in_step_progress=True
+                        step_progress_str+=res.event.payload.delta.text
+                        # print(res.event.payload.delta.text, end='')
+                    else:
+                        if in_step_progress == True:
+                            pprint(f"step results: {step_progress_str}")
+                            in_step_progress = False
+                            step_progress_str = ''
+                        pprint(res)
+        else:
+            if args.verbose:
+                print("Non-generator response...")
+            pprint(response)
+
+response_printer = ResponsePrinter()
+
+class ResponseLogger():
+    def log(response):
+        if args.verbose:
+            print(f" Skipping logging of the 'response'.")
+            # It seems that the logging API should be smarter about handling different types of input.
+            # The following _only_ works when the --streaming option is used. Otherwise, it crashes 
+            # in the call above to AgentEventLogger().log(response)
+            # if isinstance(response, GeneratorType):
+            #     for res in response:
+            #         do_log(res)
+            # else:
+            #     do_log(response)
+
+response_logger = ResponseLogger()
 
 example_prompts = [
     "When did Pope Francis die?",
@@ -193,8 +213,8 @@ while True:
             messages=[{"role": "user", "content": user_prompt}],
             stream=args.streaming,
         )
-        pp_response(response)
-        log_response(response)
+        response_printer.print(response)
+        response_logger.log(response)
     except EOFError:
         if args.verbose:
             print("Finished!")

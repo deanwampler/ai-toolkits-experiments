@@ -63,6 +63,9 @@ llama stack run ./run-with-safety.yaml \
   --env OLLAMA_URL=http://localhost:11434
 ```
 
+> [!NOTE]
+> You will need to run `ollama pull $INFERENCE_MODEL` before using a model the first time.
+
 First, the "stack build" didn't generate the required yaml files that the instructions said would be generated, at least, assuming they would have been written in the current directory, as implied by the two `llama stack` commands. 
 
 However, I found them in `$CONDA_PREFIX/lib/python3.10/site-packages/llama_stack/templates/ollama`. That's why `PATH_TO_YAMLS` is defined in `./.setup.sh` to use this path, which I then used in another script `run-stack.sh` that executes the two `llama stack run ...` commands above, e.g., `llama stack run $PATH_TO_YAMLS/run.yaml ...`.
@@ -1245,21 +1248,24 @@ For plugins like this Gofannon function, you are expected to pass a function wit
 
 I tried using several models through ollama and found that most of them were not really capable of invoking tools, like Google Search.
 
-
 Models I tried (ollama-compatible names):
 
-* `llama3.2:3B`
-* `llama3.2:1b-instruct-fp16`
-* `llama3.2:3b-instruct-turbo`
-* `llama3.3:70b`                  # 43GB
-* `llama3.3:70b-instruct-fp16`    # 143GB - too big for a laptop, so not tried!
-* `llama3.3:70b-instruct-q4_K_M`  # 43GB - manageable!
-* `llama3-chatqa:70b`             # 40GB - trained by NVIDIA and closest to what the Gofannon example uses with an external service: meta-llama/Llama-3-70b-chat
+| Number<sup>†</sup> | Ollama Name | Size | Comments | Did It Work? |
+| --------: | :---------- | ---: | :------- | :----------- |
+| 1 | `granite3.3:8b`                |   5GB | | No |
+| 2 | `llama3.2:3B`                  |   2GB | | No |
+| 3 | `llama3.2:1b-instruct-fp16`    | 1.5GB | | No |
+| 4 | `llama3.3:70b`                 |  43GB | | No |
+| 5 | `llama3.3:70b-instruct-fp16`   | 143GB | Too big for a laptop, so not tried! | N/A |
+| 6 | `llama3.3:70b-instruct-q4_K_M` |  43GB | Manageable size! | |
+| 7 | `llama3-chatqa:70b`            |  40GB | Trained by NVIDIA and closest to what the Gofannon example uses with an external service: `meta-llama/Llama-3-70b-chat` | |
+
+<sup>†</sup> For use with the `run-agent-example.sh` script.
 
 Let's try these models using the script `run-agent-example.sh`, which conveniently lets us pick the model by number:
 
 ```shell
-$ run-agent-example.sh 1
+$ run-agent-example.sh 2
 run-agent-example.sh:  INFO: uv run --with llama-stack python agent-example.py --model llama3.2:3B
 INFO     2025-04-24 17:29:52,653 llama_stack.providers.remote.inference.ollama.ollama:89 inference: checking
          connectivity to Ollama at `http://localhost:11434`...
