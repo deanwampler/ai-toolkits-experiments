@@ -60,3 +60,21 @@ GGML_CUDA=1 make && pip install -r requirements.txt
 > ```
 > cd llama.cpp-git && LLAMA_CUBLAS=1 make && pip install -r requirements.txt
 > ```
+
+
+## Pleias 1.0 Models
+
+(April 28, 2025)
+
+Let's try the [new, small models from Pleias](https://huggingface.co/blog/Pclanglais/common-models). First, I'll try the 1B parameter [GGUF](https://huggingface.co/MaziyarPanahi/Pleias-Nano-GGUF) model:
+
+```shell
+# Load and run the model:
+llama-cli -hf MaziyarPanahi/Pleias-Nano-GGUF:Q8_0 -p "Once upon a time,"
+llama-cli -hf MaziyarPanahi/Pleias-Nano-GGUF:Q8_0 \
+  -p "You are a helpful assistant" \
+  --conversation
+```
+
+Such a small model is not very good for these purposes. However, it's not designed for them...
+
