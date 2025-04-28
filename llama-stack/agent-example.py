@@ -14,26 +14,19 @@ from rich.pretty import pprint
 from rich.pretty import Pretty
 from rich.panel import Panel
 
+# Use the driver script `run-agent-example.sh` to drive this program.
+
 # For gofannon and the Google API client:
 # pip install git+https://github.com/rawkintrevo/gofannon.git@161 --quiet
 # pip install google-api-python-client
 
-# Ollama-compatible names:
-def_model = "llama3.2:3B"
-# def_model = "llama3.2:1b-instruct-fp16"
-# def_model = "llama3.2:3b-instruct-turbo"
-# def_model = "llama3.3:70b"                  # 43GB
-# def_model = "llama3.3:70b-instruct-fp16"    # 143GB - too big for a laptop, so not tried!
-# def_model = "llama3.3:70b-instruct-q4_K_M"  # 43GB - manageable!
-# def_model = "llama3-chatqa:70b"             # 40GB - trained by NVIDIA and closest to what the Gofannon example uses with an external service: meta-llama/Llama-3-70b-chat
 
 parser = argparse.ArgumentParser(
                     prog='agent-example',
                     description='An extended version of the Llama Stack agent example here: https://llama-stack.readthedocs.io/en/latest/building_applications/agent.html',
                     epilog='')
 parser.add_argument('-m', '--model',
-                    default=def_model,
-                    help=f"The model to use (default is {def_model})")
+                    help=f"The model to use")
 parser.add_argument('-s', '--streaming',
                     action="store_true",
                     help="Run the chat example with streaming output (default is non-streaming)")
@@ -135,10 +128,9 @@ def do_log(response):
         log.print()
 
 class ResponsePrinter():
-    step_progress_str = ""
     in_step_progress  = False
 
-    def print(response):
+    def print(self, response):
         if isinstance(response, GeneratorType):
             if args.verbose:
                 print("Generator response...")
@@ -148,14 +140,18 @@ class ResponsePrinter():
                 else:
                     # if isinstance(res, AgentTurnResponseStepProgressPayload):
                     if res.event.payload.event_type == "step_progress":
-                        in_step_progress=True
-                        step_progress_str+=res.event.payload.delta.text
-                        # print(res.event.payload.delta.text, end='')
+                        if self.in_step_progress == False:
+                            self.in_step_progress=True
+                            print("step results: ", end='')
+                        delta = res.event.payload.delta
+                        if delta.type == "text":
+                            print(delta.text, end='')
+                        else:
+                            pprint(res)
                     else:
-                        if in_step_progress == True:
-                            pprint(f"step results: {step_progress_str}")
-                            in_step_progress = False
-                            step_progress_str = ''
+                        if self.in_step_progress == True:
+                            self.in_step_progress = False
+                            print('')
                         pprint(res)
         else:
             if args.verbose:
@@ -165,7 +161,7 @@ class ResponsePrinter():
 response_printer = ResponsePrinter()
 
 class ResponseLogger():
-    def log(response):
+    def log(self, response):
         if args.verbose:
             print(f" Skipping logging of the 'response'.")
             # It seems that the logging API should be smarter about handling different types of input.
@@ -181,24 +177,28 @@ response_logger = ResponseLogger()
 
 example_prompts = [
     "When did Pope Francis die?",
+    "When did Pope Francis die? Be sure to search for the latest news about him.",
     "Use google search to determine when Pope Francis died.",
-    "What is the current weather in Chicago?",
 ]
 
 def prompt() -> str:
     print(f"Enter your prompts. When finished, enter a blank line, 'q', 'quit', or ^D.")
-    print("Examples (enter the number to try them):")
+    print("Examples (enter the number to try one or 'all' to try all of them):")
     for i in range(len(example_prompts)):
         print(f"{(i+1):2d}: {example_prompts[i]}")
     return input("> ")
 
+
 print(f"A chat agent example app using {streaming_msg} responses:")
 while True:
     try:
+        user_prompts = []
         user_prompt = prompt()
         if user_prompt == "" or user_prompt == "q" or user_prompt == "quit":
             print("Finished!")
             break
+        elif user_prompt == "all" or user_prompt == "ALL":
+            user_prompts = example_prompts
         elif re.fullmatch(r'^\d+$', user_prompt):
             index = int(user_prompt)
             num_examples = len(example_prompts)
@@ -206,15 +206,19 @@ while True:
                 print(f"For running an example, input a number between 1 and {num_examples}")
                 continue
             else:
-                user_prompt = example_prompts[index-1]
-                print(f"Using example prompt> {user_prompt}")
-        response = agent.create_turn(
-            session_id=session_id,
-            messages=[{"role": "user", "content": user_prompt}],
-            stream=args.streaming,
-        )
-        response_printer.print(response)
-        response_logger.log(response)
+                user_prompts = [example_prompts[index-1]]
+        else:
+            user_prompts = [user_prompt]
+
+        for user_prompt in user_prompts:
+            print(f"\nUsing prompt> {user_prompt}")
+            response = agent.create_turn(
+                session_id=session_id,
+                messages=[{"role": "user", "content": user_prompt}],
+                stream=args.streaming,
+            )
+            response_printer.print(response)
+            response_logger.log(response)
     except EOFError:
         if args.verbose:
             print("Finished!")
