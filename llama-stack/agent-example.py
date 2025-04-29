@@ -12,22 +12,14 @@ from rich.pretty import pprint
 from rich.pretty import Pretty
 from rich.panel import Panel
 
-# Ollama-compatible names:
-def_model = "llama3.2:3B"
-# def_model = "llama3.2:1b-instruct-fp16"
-# def_model = "llama3.2:3b-instruct-turbo"
-# def_model = "llama3.3:70b"                  # 43GB
-# def_model = "llama3.3:70b-instruct-fp16"    # 143GB - too big for a laptop, so not tried!
-# def_model = "llama3.3:70b-instruct-q4_K_M"  # 43GB - manageable!
-# def_model = "llama3-chatqa:70b"             # 40GB - trained by NVIDIA and closest to what the Gofannon example uses with an external service: meta-llama/Llama-3-70b-chat
+# Use the driver script `run-agent-example.sh` to drive this program.
 
 parser = argparse.ArgumentParser(
                     prog='agent-example',
                     description='An extended version of the Llama Stack agent example here: https://llama-stack.readthedocs.io/en/latest/building_applications/agent.html',
                     epilog='')
 parser.add_argument('-m', '--model',
-                    default=def_model,
-                    help=f"The model to use (default is {def_model})")
+                    help=f"The model to use")
 parser.add_argument('-s', '--streaming',
                     action="store_true",
                     help="Run the chat example with streaming output (default is non-streaming)")
@@ -44,14 +36,13 @@ client = (
 agent = Agent(
     client,
     model=args.model,
-#    model="meta-llama/Llama-3-70b-chat",
     instructions="You are a helpful assistant that can use tools to answer questions.",
     sampling_params={
         "strategy": {"type": "top_p", "temperature": 1.0, "top_p": 0.9},
     },
     tools=[
         "builtin::websearch",
-        "builtin::code_interpreter",
+        "builtin::code_interpreter", 
         "builtin::rag/knowledge_search",
     ],
 )
@@ -61,6 +52,7 @@ pprint(f"agent.agent_config = {agent.agent_config}")
 # Create a session
 session_id = agent.create_session(session_name="Test conversation")
 
+# From the original version of this function in the Llama Stack docs:
 # Turns:
 # Each interaction with an agent is called a “turn” and consists of:
 # 1. Input Messages: What the user sends to the agent
@@ -75,18 +67,11 @@ session_id = agent.create_session(session_name="Test conversation")
 # Refer to the [Agent Execution Loop](https://llama-stack.readthedocs.io/en/latest/building_applications/agent_execution_loop.html)
 # for more details on what happens within an agent turn.
 
-# First, do a "non-streaming" prompt. 
-# Update: Now runs an interactive session.
-
 if args.verbose:
     pprint("Locals:")
     pretty = Pretty(locals())
     panel = Panel(pretty)
     print(panel)
-
-if args.streaming and not args.verbose:
-    print("NOTE: --verbose turned on automatically when --streaming used.")
-    args.verbose = True
 
 def format_response(response) -> Pretty:
     return f"""
@@ -109,52 +94,79 @@ def do_log(response):
     for log in AgentEventLogger().log(response):
         log.print()
 
-def pp_response(response):
-    if isinstance(response, GeneratorType):
-        if args.verbose:
-            print("Generator response...")
-        for res in response:
-            if args.verbose:
-                pprint(res)
-            else:
-                pprint(res.event.payload.tool_call)
-    else:
-        if args.verbose:
-            print("Non-generator response...")
-        pprint(response)
+class ResponsePrinter():
+    in_step_progress  = False
 
-def log_response(response):
-    if args.verbose:
-        print(f" Skipping logging of the 'response'.")
-        # It seems that the logging API should be smarter about handling different types of input.
-        # The following _only_ works when the --streaming option is used. Otherwise, it crashes 
-        # in the call above to AgentEventLogger().log(response)
-        # if isinstance(response, GeneratorType):
-        #     for res in response:
-        #         do_log(res)
-        # else:
-        #     do_log(response)
+    def print(self, response):
+        if isinstance(response, GeneratorType):
+            if args.verbose:
+                print("Generator response...")
+            for res in response:
+                if args.verbose:
+                    pprint(res)
+                else:
+                    # Attempt to cut down on the huge amount of output, especially
+                    # when streaming.
+                    if res.event.payload.event_type == "step_progress":
+                        if self.in_step_progress == False:
+                            self.in_step_progress=True
+                            print("step results: ", end='')
+                        delta = res.event.payload.delta
+                        if delta.type == "text":
+                            print(delta.text, end='')
+                        else:
+                            pprint(res)
+                    else:
+                        if self.in_step_progress == True:
+                            self.in_step_progress = False
+                            print('')
+                        pprint(res)
+        else:
+            if args.verbose:
+                print("Non-generator response...")
+            pprint(response)
+
+response_printer = ResponsePrinter()
+
+class ResponseLogger():
+    def log(self, response):
+        if args.verbose:
+            print(f" Skipping logging of the 'response'.")
+            # It seems that the logging API should be smarter about handling different types of input.
+            # The following _only_ works when the --streaming option is used. Otherwise, it crashes 
+            # in the call above to AgentEventLogger().log(response)
+            # if isinstance(response, GeneratorType):
+            #     for res in response:
+            #         do_log(res)
+            # else:
+            #     do_log(response)
+
+response_logger = ResponseLogger()
 
 example_prompts = [
     "When did Pope Francis die?",
+    "When did Pope Francis die? Be sure to search for the latest news about him.",
     "Use google search to determine when Pope Francis died.",
-    "What is the current weather in Chicago?",
 ]
 
 def prompt() -> str:
     print(f"Enter your prompts. When finished, enter a blank line, 'q', 'quit', or ^D.")
-    print("Examples (enter the number to try them):")
+    print("Examples (enter the number to try one or 'all' to try all of them):")
     for i in range(len(example_prompts)):
         print(f"{(i+1):2d}: {example_prompts[i]}")
     return input("> ")
 
+
 print(f"A chat agent example app using {streaming_msg} responses:")
 while True:
     try:
+        user_prompts = []
         user_prompt = prompt()
         if user_prompt == "" or user_prompt == "q" or user_prompt == "quit":
             print("Finished!")
             break
+        elif user_prompt == "all" or user_prompt == "ALL":
+            user_prompts = example_prompts
         elif re.fullmatch(r'^\d+$', user_prompt):
             index = int(user_prompt)
             num_examples = len(example_prompts)
@@ -162,15 +174,19 @@ while True:
                 print(f"For running an example, input a number between 1 and {num_examples}")
                 continue
             else:
-                user_prompt = example_prompts[index-1]
-                print(f"Using example prompt> {user_prompt}")
-        response = agent.create_turn(
-            session_id=session_id,
-            messages=[{"role": "user", "content": user_prompt}],
-            stream=args.streaming,
-        )
-        pp_response(response)
-        log_response(response)
+                user_prompts = [example_prompts[index-1]]
+        else:
+            user_prompts = [user_prompt]
+
+        for user_prompt in user_prompts:
+            print(f"\nUsing prompt> {user_prompt}")
+            response = agent.create_turn(
+                session_id=session_id,
+                messages=[{"role": "user", "content": user_prompt}],
+                stream=args.streaming,
+            )
+            response_printer.print(response)
+            response_logger.log(response)
     except EOFError:
         if args.verbose:
             print("Finished!")
