@@ -595,3 +595,6 @@ Finished!
 
 So, Granite Guardian doesn't work as a drop-in replacement, but there may be ways to coerce it to return a data structure more like Llama Guard returns.The better solution is to implement support for flexible guardians in Llama Stack, which I'll investigate.
 
+## Gofannon and Agents
+
+The [`gofannon-example`](https://github.com/deanwampler/ai-toolkits-experiments/tree/gofannon-example/llama-stack) branch for this README has an extension of `agent-example.py` that uses a [gofannon](https://the-ai-alliance.github.io/gofannon/) function to invoke Google Search. I left this exercise on the branch, instead of merging to `main`, because of the extra dependencies. 
