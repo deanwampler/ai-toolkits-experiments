@@ -599,7 +599,7 @@ So, Granite Guardian doesn't work as a drop-in replacement, but there may be way
 
 (April 23-28, 2025)
 
-The AI Alliance [Gofannon](https://the-ai-alliance.github.io/gofannon/) project is a catalog of contributed tools that are portable across many different application frameworks, with recent support added for [Llama Stack integration](https://github.com/The-AI-Alliance/gofannon/pull/275). I'll explore this on a branch of my repo, [`gofannon-example`](https://github.com/deanwampler/ai-toolkits-experiments/tree/gofannon-example), because of the required extra dependencies. If you want to try this, start with
+The AI Alliance [Gofannon](https://the-ai-alliance.github.io/gofannon/) project is a catalog of contributed tools that are portable across many different application frameworks, with recent support added for [Llama Stack integration](https://github.com/The-AI-Alliance/gofannon/pull/275). I'll explore this on a branch of my repo, [`gofannon-example`](https://github.com/deanwampler/ai-toolkits-experiments/tree/gofannon-example), because of the required extra dependencies. If you want to try this, start with the following:
 
 ```shell
 git fetch --all --prune
