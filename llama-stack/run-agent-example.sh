@@ -23,12 +23,13 @@ models_help() {
 
 help() {
 	cat <<EOF
-Usage: $0 [-h|--help] [-n|--noop] [model|number]
+Usage: $0 [-h|--help] [-n|--noop] [-g|--gofannon] [model|number]
 Where
 -h | --help         Print this message and exit.
 -n | --noop         Just print the commands but don't execute them.
 -v | --verbose      Use verbose output.
 -s | --streaming    Use the streaming option.
+-g | --gofannon     Run the agent-example-gofannon.py example instead of the "standard" example.
 model | number      Run the specified model or the number corresponding to these models:
 $(models_help "                    ")
                     Default: the script prompts you for the model.
@@ -67,6 +68,7 @@ parse_model_string() {
 : ${NOOP:=}
 streaming=""
 verbose=""
+example_suffix=
 while [[ $# -gt 0 ]]
 do
 	case $1 in
@@ -82,6 +84,12 @@ do
 			;;
 		-s|--streaming)
 			streaming="--streaming"
+			;;
+		-g|--gofannon)
+			example_suffix="-gofannon"
+			;;
+		-*)
+			error "Unrecognized option $1"
 			;;
 		*)
 			parse_model_string "$1"
@@ -105,11 +113,12 @@ do
 			parse_model_string "$input"
 	esac
 done
+[[ -n "$example_suffix" ]] && info "Running the gofannon example."
 
 info "export INFERENCE_MODEL=$model"
-info "uv run --with llama-stack python agent-example.py $verbose --model $model $streaming"
+info "uv run --with llama-stack python agent-example${example_suffix}.py $verbose --model $model $streaming"
 if [[ -z $NOOP ]]
 then
 	export INFERENCE_MODEL=$model
-	uv run --with llama-stack python agent-example.py $verbose --model $model $streaming
+	uv run --with llama-stack python agent-example${example_suffix}.py $verbose --model $model $streaming
 fi

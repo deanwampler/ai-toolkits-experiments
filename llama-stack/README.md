@@ -599,14 +599,9 @@ So, Granite Guardian doesn't work as a drop-in replacement, but there may be way
 
 (April 23-28, 2025)
 
-The AI Alliance [Gofannon](https://the-ai-alliance.github.io/gofannon/) project is a catalog of contributed tools that are portable across many different application frameworks, with recent support added for [Llama Stack integration](https://github.com/The-AI-Alliance/gofannon/pull/275). I'll explore this on a branch of my repo, [`gofannon-example`](https://github.com/deanwampler/ai-toolkits-experiments/tree/gofannon-example), because of the required extra dependencies. If you want to try this, start with the following:
+The AI Alliance [Gofannon](https://the-ai-alliance.github.io/gofannon/) project is a catalog of contributed tools that are portable across many different application frameworks, with recent support added for [Llama Stack integration](https://github.com/The-AI-Alliance/gofannon/pull/275). I'll explore this on a variation of the `agent-example.py` called `agent-example-gofannon.py`, because of the required extra dependencies. If you want to try this, start with the following:
 
-```shell
-git fetch --all --prune
-git checkout gofannon-example
-```
-
-Some dependencies are needed (I believe `aiosqlite` was needed for a different issue...):
+Some dependencies are needed, `gofannon` and `google-api-python-client`. I believe `aiosqlite` was needed for a different issue:
 
 ```shell
 uv run --with llama-stack pip install \
@@ -615,7 +610,7 @@ uv run --with llama-stack pip install \
   aiosqlite
 ```
 
-The Gofannon function I'll try is the one supporting invocations of Google Search. The relevant code added to `agent-example.py` is here:
+The Gofannon function I'll try is the one supporting invocations of Google Search. The relevant code added to `agent-example-gofannon.py` is here:
 
 ```python
 ...
@@ -671,7 +666,7 @@ Let's try these models using the script `run-agent-example.sh`, which convenient
 
 So, only `llama3.3:70b` actually invoked Google search and returned the correct results consistently. 
 
-`llama3.2:3B` had some curious results. First, here is one run where each question is asked (using `run-agent-example.sh --streaming 2`, then entering `1`, `2`, and `3` at the prompt):
+`llama3.2:3B` had some curious results. First, here is one run where each question is asked, using `run-agent-example.sh --gofannon --streaming 2`, then entering `1`, `2`, and `3` at the prompt (The `--gofannon` flag is needed to tell the shell script to use `agent-example-gofannon.py`):
 
 **First question: _When did Pope Francis die?_**
 
