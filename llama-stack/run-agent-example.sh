@@ -23,8 +23,8 @@ models_help() {
 
 help() {
 	cat <<EOF
-Usage: $0 [-h|--help] [-n|--noop] [-g|--gofannon] [model|number]
-Where
+Usage: $0 [-h|--help] [-n|--noop] [-v|--verbose] [-g|--gofannon] [model|number]
+Where:
 -h | --help         Print this message and exit.
 -n | --noop         Just print the commands but don't execute them.
 -v | --verbose      Use verbose output.
