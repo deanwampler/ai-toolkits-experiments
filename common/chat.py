@@ -28,12 +28,12 @@ class ResponsePrinter():
                 if self.verbose:
                     pprint(res)
                 else:
-                    non_verbose_print(res)
+                    self.non_verbose_print(res)
         else:
             if self.verbose:
                 pprint(response)
             else:
-                non_verbose_print(response)
+                self.non_verbose_print(response)
 
 
 class ResponseLogger():
@@ -47,9 +47,9 @@ class ResponseLogger():
         if self.verbose:
             if isinstance(response, GeneratorType):
                 for res in response:
-                    do_log(res)
+                    self.do_log(res)
             else:
-                do_log(response)
+                self.do_log(response)
 
 class Chat():
     def __init__(self,
