@@ -1,7 +1,6 @@
 # Register a safety shield
 
-from common import create_library_client
-from prompt import LlamaStackChat, LlamaStackResponseLogger, LlamaStackResponsePrinter
+from llama_client import create_library_client, LlamaStackChat, LlamaStackResponseLogger, LlamaStackResponsePrinter
 import argparse, os, re, sys
 from termcolor import colored
 from llama_stack_client import AgentEventLogger

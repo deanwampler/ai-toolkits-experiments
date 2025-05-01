@@ -18,6 +18,7 @@ Where:
                     Optional, but useful if you intermix arguments or the query string
                     has words that start with "-"!
 query               The rest of the arguments are treated as the query string.
+                    If not specified, "Hello Llama! Can you give me a quick intro?" is used.
 EOF
 }
 
@@ -83,7 +84,7 @@ then
   command -v jq 2>&1 > /dev/null || error "If you use the --format option, jq must be installed."
 fi
 
-[[ ${#query} -eq 0 ]] && error "Please specify a query."
+[[ ${#query} -eq 0 ]] && query=("Hello Llama! Can you give me a quick intro?")
 
 if $verbose 
 then
