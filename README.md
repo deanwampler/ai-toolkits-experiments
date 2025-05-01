@@ -1,8 +1,8 @@
 # README for `ai-toolkits-experiments`
 
-My experiments with different Gen AI tool kits, especially for local execution on systems like Apple Silicon, but also application patterns like RAG and agents. There isn't much rhyme or reason to this repo otherwise... :grin:
+My experiments with different Gen AI tool kits. Initially, I focused on evaluating opens for local inference on personal computers, mostly Apple Silicon Macs. However, I have also looked at application patterns like RAG, agents, and [Model Context Protocol](model-context-protocol) (MCP), as well as tool kits like [llm](llm) and [Llama Stack](llama-stack). So, this is a grab bag of stuff...
 
-This repo uses [git submodules](https://git-scm.com/book/en/v2/Git-Tools-Submodules) of other repos, such as the toolkits themselves for _some_ of the exercises. Hence, to get those submdules, you can pass `--recurse-submodules` when you clone this repo or initialize them separately.
+For many of the sections, I use [git submodules](https://git-scm.com/book/en/v2/Git-Tools-Submodules) of other tool repos. To get those submdules when you clone the repo, pass `--recurse-submodules` to `git clone`, or initialize them separately.
 
 All at once:
 
@@ -19,4 +19,4 @@ git submodule update --init --recursive
 
 ## Notes on Particular Projects
 
-Most of the project subfolders have their own READMEs. In a few cases, additional commands are required to get started, which are documented in the corresponding README.
+The project subfolders have their own READMEs, which document additional setup that may be required, etc.
