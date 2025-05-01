@@ -78,6 +78,8 @@ query: Hello Llama! Can you give me a quick intro?
 
 ## Using the Python (Llama API)
 
+The corresponding Python example using the Llama API is the following, with the added code to get the API key from the environment:
+
 ```python
 import os
 from llama_api_client import LlamaAPIClient
@@ -98,9 +100,10 @@ response = client.chat.completions.create(
 print(response)
 ```
 
-To use this new API, you have to run `pip install llama-api-client`. I'll use a `uv` environment again and I named the Python file `invoke-llama-api.py`:
+To use this new API, you have to run `pip install llama-api-client` and also install `rich` and `termcolor` for my wrapper script. I'll use a `uv` environment again and I named the Python file `invoke-llama-api.py`, which is actually adapted from `../llama-stack/agent-example.py` to use the shared helper code to create a chat tool:
 
 ```shell
+$ uv run --with llama-api-client pip install rich termcolor # one time only!
 $ uv run --with llama-api-client invoke-llama-api.py
 ...
 llama_api_client.NotFoundError: Error code: 404 - {'title': 'Not Found', 'detail': "Path '/chat/completions' was not found", 'status': 404}
@@ -112,13 +115,45 @@ There is a typo in the example; the base URL needs to be `base_url="https://api.
 
 ```shell
 $ uv run --with llama-api-client invoke-llama-api.py
+A chat example using the Llama API:
+Enter your prompts. When finished, enter a blank line, 'q', 'quit', or ^D.
+Examples (enter the number to try one or 'all' to try all of them):
+ 1: Hello Llama! Can you give me a quick intro?
+ 2: When did Pope Francis die?
+ 3: When did Pope Francis die? Be sure to search for the latest news about him.
+ 4: Use google search to determine when Pope Francis died.
+> 1
 
-CreateChatCompletionResponse(completion_message=CompletionMessage(content=MessageTextContentItem(text="I'm Llama, a Meta-designed model here to adapt to your conversational style. Whether you need quick answers, deep dives into ideas, or just want to vent, joke or brainstorm—I'm here for it. What’s on your mind?", type='text'), role='assistant', stop_reason='stop', tool_calls=[]), metrics=[Metric(metric='num_completion_tokens', value=51.0, unit='tokens'), Metric(metric='num_prompt_tokens', value=22.0, unit='tokens'), Metric(metric='num_total_tokens', value=73.0, unit='tokens')])
+Using prompt> Hello Llama! Can you give me a quick intro?
+CreateChatCompletionResponse(
+│   completion_message=CompletionMessage(
+│   │   content=MessageTextContentItem(
+│   │   │   text="I'm Llama, a Meta-designed model here to adapt to your conversational style. Whether you need quick answers, deep dives into ideas, or just want to vent, joke or brainstorm—I'm here for it. What’s on your mind?",
+│   │   │   type='text'
+│   │   ),
+│   │   role='assistant',
+│   │   stop_reason='stop',
+│   │   tool_calls=[]
+│   ),
+│   metrics=[
+│   │   Metric(metric='num_completion_tokens', value=51.0, unit='tokens'),
+│   │   Metric(metric='num_prompt_tokens', value=22.0, unit='tokens'),
+│   │   Metric(metric='num_total_tokens', value=73.0, unit='tokens')
+│   ]
+)
+Enter your prompts. When finished, enter a blank line, 'q', 'quit', or ^D.
+Examples (enter the number to try one or 'all' to try all of them):
+ 1: Hello Llama! Can you give me a quick intro?
+ 2: When did Pope Francis die?
+ 3: When did Pope Francis die? Be sure to search for the latest news about him.
+ 4: Use google search to determine when Pope Francis died.
+>
+Finished!
 ```
 
 ## Using the Llama API through OpenAI
 
-Note that you still use the `llama_api_key`, rather than an OpenAI API key. You'll also need to `pip install openai`:
+You can also go through the OpenAI API. In the following example, note that you still use the `llama_api_key`, rather than an OpenAI API key. You'll also need to `pip install openai`:
 
 ```python
 import os
@@ -139,13 +174,63 @@ response = client.chat.completions.create(
 
 print(response)
 ```
-
 (Note that this example already had the required `/v1/` part of the path.) Let's try it.
 
-```shell
-$ uv run --with openai invoke-open-ai.py
+My expanded chat version is `invoke-open-ai.py`:
 
-ChatCompletion(id='AHZ2LTwa7L7-PW9r733rzj1', choices=[Choice(finish_reason='stop', index=0, logprobs=ChoiceLogprobs(content=None, refusal=None), message=ChatCompletionMessage(content="I'm Llama, a Meta-designed model here to adapt to your conversational style. Whether you need quick answers, deep dives into ideas, or just want to vent, joke or brainstorm—I'm here for it. What’s on your mind?", refusal='', role='assistant', annotations=None, audio=None, function_call=None, tool_calls=[], id='AHZ2LTwa7L7-PW9r733rzj1'))], created=1746107585, model='Llama-4-Maverick-17B-128E-Instruct-FP8', object='chat.completions', service_tier=None, system_fingerprint=None, usage=CompletionUsage(completion_tokens=51, prompt_tokens=22, total_tokens=73, completion_tokens_details=None, prompt_tokens_details=None))
+```shell
+$ uv run --with openai --with llama_api_client invoke-open-ai.py
+
+A chat example using the Llama API OpenAI integration:
+Enter your prompts. When finished, enter a blank line, 'q', 'quit', or ^D.
+Examples (enter the number to try one or 'all' to try all of them):
+ 1: Hello Llama! Can you give me a quick intro?
+ 2: When did Pope Francis die?
+ 3: When did Pope Francis die? Be sure to search for the latest news about him.
+ 4: Use google search to determine when Pope Francis died.
+> 1
+
+Using prompt> Hello Llama! Can you give me a quick intro?
+ChatCompletion(
+│   id='AmELyFD-msNOBO6Q1EaVGvs',
+│   choices=[
+│   │   Choice(
+│   │   │   finish_reason='stop',
+│   │   │   index=0,
+│   │   │   logprobs=ChoiceLogprobs(content=None, refusal=None),
+│   │   │   message=ChatCompletionMessage(
+│   │   │   │   content="I'm Llama, a Meta-designed model here to adapt to your conversational style. Whether you need quick answers, deep dives into ideas, or just want to vent, joke or brainstorm—I'm here for it. What’s on your mind?",
+│   │   │   │   refusal='',
+│   │   │   │   role='assistant',
+│   │   │   │   annotations=None,
+│   │   │   │   audio=None,
+│   │   │   │   function_call=None,
+│   │   │   │   tool_calls=[],
+│   │   │   │   id='AmELyFD-msNOBO6Q1EaVGvs'
+│   │   │   )
+│   │   )
+│   ],
+│   created=1746126394,
+│   model='Llama-4-Maverick-17B-128E-Instruct-FP8',
+│   object='chat.completions',
+│   service_tier=None,
+│   system_fingerprint=None,
+│   usage=CompletionUsage(
+│   │   completion_tokens=51,
+│   │   prompt_tokens=22,
+│   │   total_tokens=73,
+│   │   completion_tokens_details=None,
+│   │   prompt_tokens_details=None
+│   )
+)
+Enter your prompts. When finished, enter a blank line, 'q', 'quit', or ^D.
+Examples (enter the number to try one or 'all' to try all of them):
+ 1: Hello Llama! Can you give me a quick intro?
+ 2: When did Pope Francis die?
+ 3: When did Pope Francis die? Be sure to search for the latest news about him.
+ 4: Use google search to determine when Pope Francis died.
+>
+Finished!
 ```
 
-
+So, the three invocation options work well. Next I'll have to investigate additional features available through this new service.
