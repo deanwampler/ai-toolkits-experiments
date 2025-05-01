@@ -18,7 +18,6 @@ Where:
                     Optional, but useful if you intermix arguments or the query string
                     has words that start with "-"!
 query               The rest of the arguments are treated as the query string.
-                    Default: the script prompts you for the query.
 EOF
 }
 
@@ -83,6 +82,8 @@ if $format
 then
   command -v jq 2>&1 > /dev/null || error "If you use the --format option, jq must be installed."
 fi
+
+[[ ${#query} -eq 0 ]] && error "Please specify a query."
 
 if $verbose 
 then
