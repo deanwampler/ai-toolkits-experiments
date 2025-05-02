@@ -19,4 +19,4 @@ git submodule update --init --recursive
 
 ## Notes on Particular Projects
 
-The project subfolders have their own READMEs, which document additional setup that may be required, etc.
+The project folders have their own READMEs, which document additional setup that may be required, etc.
