@@ -2,6 +2,8 @@
 
 This section discusses Simon Willison’s wonderful [`llm` tool](https://github.com/simonw/llm).
 
+For an example of using `llm` extensively to generate Q&A pairs for a RAG benchmark, see my [AI Alliance](https://the-ai-alliance.github.io) project [`website-embedding-benchmarks`](https://github.com/The-AI-Alliance/website-embedding-benchmarks). This is intended to evolve into a tutorial project of using tools to generate custom benchmarks for measuring the performance of a custom RAG system, in this case one that uses the contents of a user-specified website (defaulting to the [AI Alliance website](https://thealliance.ai)) as the source of the RAG vectors.
+
 ## Chris Adams' Convenient Scripts
 
 [This post](https://rtl.chrisadams.me.uk/2024/12/how-i-use-llms-neat-tricks-with-simons-llm-tool/) by Chris Adams discusses some `fish` shell functions he uses with VSCode
