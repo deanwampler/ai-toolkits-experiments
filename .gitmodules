@@ -25,3 +25,6 @@
 [submodule "mlx-examples"]
 	path = apple/mlx-lm/mlx-examples-git
 	url = git@github.com:ml-explore/mlx-examples.git
+[submodule "langtest/langtest"]
+	path = langtest/langtest
+	url = git@github.com:JohnSnowLabs/langtest.git

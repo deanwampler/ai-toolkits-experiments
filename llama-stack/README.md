@@ -36,8 +36,16 @@ ollama run llama3.2:3b --keepalive 60m
 I picked the `venv` option after having some troubles with the `conda` option (but I still used the minimal conda environment above, as the baseline...):
 
 ```shell
-INFERENCE_MODEL=llama3.2:3B uv run --with llama-stack llama stack build --template ollama --image-type venv --run
+ENABLE_OLLAMA=ollama OLLAMA_INFERENCE_MODEL=llama3.2:3B uv run --with llama-stack llama stack build --template starter --image-type venv --run
 ```
+
+> **NOTE:** I previously documented using the following command, but the `ollama` template no longer exists and the `ENABLE_OLLAMA` environment variable is used with the `starter` template, as shown above.
+> 
+> ```shell
+> INFERENCE_MODEL=llama3.2:3B uv run --with llama-stack llama stack build \ > --template ollama --image-type venv --run
+> ```
+>
+> I have not yet updated the rest of this page with this updated information, FYI...
 
 Test this in a second terminal window this by running the [demo script](https://llama-stack.readthedocs.io/en/latest/getting_started/index.html#step-3-run-the-demo), which I have adapted in `demo-script.py`:
 
