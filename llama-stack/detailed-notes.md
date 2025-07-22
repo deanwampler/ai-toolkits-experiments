@@ -1,6 +1,6 @@
 # README for Llama Stack Experiments
 
-> **NOTE:** This is a long file of _lab notes_. Not everything said at the beginning applied by the time I got to the end!
+> **NOTE:** This is a long file of _lab notes_. Not everything said at the beginning applied by the time I got to the end! In fact, it appears that quite a bit has changed in the Llama Stack getting started docs since these notes were made, so much of what's here no longer applies. The [`README.md`](README.md) has more recent information.
 
 Following these instructions for use with Ollama:
 
@@ -11,11 +11,11 @@ Here are a few observations.
 I started with a conda environment:
 
 ```shell
-conda create -n llama-stack -y python=3.11 pip
+conda create -n llama-stack -y python=3.10 pip
 conda activate llama-stack
 ```
 
-However, it appears that when I ran the recommended `uv` setup command discussed below, it used Python 3.10.
+Python 3.10 is used here, because it is also used below, although it probably doesn't matter... 
 
 > **NOTE:** Some of the scripts mentioned going forward, such as `./.setup.sh` have been moved to the `old` directory, because ultimately I decided not to use them.
 
