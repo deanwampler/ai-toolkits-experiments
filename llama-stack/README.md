@@ -50,7 +50,7 @@ ENABLE_OLLAMA=ollama OLLAMA_INFERENCE_MODEL=llama3.2:3B uv run --with llama-stac
 Test this in a second terminal window this by running the [demo script](https://llama-stack.readthedocs.io/en/latest/getting_started/index.html#step-3-run-the-demo), which I have adapted in `demo-script.py`:
 
 ```shell
-$ uv run --with llama-stack-client demo_script.py
+$ uv run --with llama-stack-client,fire,requests demo_script.py
 
 Connecting to the llama stack client: http://localhost:5001.
 If this fails, make sure the port value is correct!!

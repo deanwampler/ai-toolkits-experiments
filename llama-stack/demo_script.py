@@ -1,4 +1,9 @@
-import readline  # enhances the input() function with real command-line editing, history, etc.
+# Copyright (c) Meta Platforms, Inc. and affiliates.
+# All rights reserved.
+#
+# This source code is licensed under the terms described in the LICENSE file in
+# the root directory of this source tree.
+
 from llama_stack_client import Agent, AgentEventLogger, RAGDocument, LlamaStackClient
 
 vector_db_id = "my_demo_vector_db"
@@ -7,14 +12,23 @@ print(f"""Connecting to the llama stack client: http://localhost:{port}.
 If this fails, make sure the port value is correct!!""")
 client = LlamaStackClient(base_url=f"http://localhost:{port}")
 
-models = client.models.list()
+def set_model_ids():
+    models = client.models.list()
+    for m in models:
+        print(m)
 
-# Select the first LLM and first embedding models
-model_id = next(m for m in models if m.model_type == "llm").identifier
-embedding_model_id = (
-    em := next(m for m in models if m.model_type == "embedding")
-).identifier
-embedding_dimension = em.metadata["embedding_dimension"]
+    # Select the first LLM and first embedding models
+    model_id = next(m for m in models if m.model_type == "llm").identifier
+    embedding_model_id = (
+        em := next(m for m in models if m.model_type == "embedding")
+    ).identifier
+    embedding_dimension = em.metadata["embedding_dimension"]
+    return model_id, embedding_model_id, embedding_dimension
+
+#model_id, embedding_model_id, embedding_dimension = set_model_ids()
+model_id = 'ollama/llama3.2:1b'
+embedding_model_id = 'text-embedding-3-small'
+embedding_dimension = 1536.0
 
 _ = client.vector_dbs.register(
     vector_db_id=vector_db_id,
