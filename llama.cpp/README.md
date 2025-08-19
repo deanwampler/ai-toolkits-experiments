@@ -2,6 +2,9 @@
 
 Experiments with [`llama.cpp`](https://github.com/ggerganov/llama.cpp).
 
+> [!NOTE]
+> August 19, 2025: Simon Willison [wrote a post](https://simonwillison.net/2025/Aug/19/gpt-oss-with-llama-cpp/) on how to use `llama.cpp` with GPT-OSS on Macs with relatively little memory.
+
 ## Approach
 
 After using the [Do It Yourself](#do-it-yourself) approach below, I discovered this easier way to work with `llama.cpp`, from this [Hugging Face page](https://huggingface.co/lmstudio-community/Llama-3.3-70B-Instruct-GGUF?show_file_info=Llama-3.3-70B-Instruct-Q4_K_M.gguf&local-app=llama.cpp) on quantized models, in this case using `Llama-3.3-70B-Instruct-Q4_K_M.gguf` (4-bit quantization version created by LMStudio).
