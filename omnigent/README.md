@@ -130,9 +130,13 @@ Here is an example of what you see after a prompt, "Write a python function that
 > [!TIP]
 > While setting things up the first time, I had a problem that nothing seemed to happen when I entered prompts. No replies and no error messages. Only when I happened to click the _> Terminal_ button at the bottom did I see error messages about not being properly configured.
 
+## Cleaning Up Sessions
+
+Quiting the `omni` CLI or the GUI seems to leave `pi` processes lying around, but it's possible my experiments did this and "normal" runs of `omni` won't do this.
+
 ## Impressions
 
-Omnigent is a nice tool if you want a lot of flexibility for using different agent frameworks and inference services, while having a consistent L&F experience. Otherwise, so far I haven't seen any other features that would make Omnigent a better choice than other web front ends, but I've only spent a few hours using it.
+Omnigent is a nice tool if you want a lot of flexibility for using different agent frameworks and inference services, while having a consistent GUI experience. While the , so far I haven't seen any other features that would make Omnigent a better choice than other web front ends, but I've only spent a few hours using it.
 
 
 
