@@ -119,6 +119,11 @@ info "export INFERENCE_MODEL=$model"
 info "uv run --with llama-stack python agent-example${example_suffix}.py $verbose --model $model $streaming"
 if [[ -z $NOOP ]]
 then
+	# INFERENCE_MODEL=ollama/llama3.2:1b \
+	# LLAMA_STACK_ENDPOINT=http://localhost:5001 \
+	# uv run 
 	export INFERENCE_MODEL=$model
-	uv run --with llama-stack python agent-example${example_suffix}.py $verbose --model $model $streaming
+	uv run agent-example${example_suffix}.py $verbose --model $model $streaming
+	# uv run --with llama-stack agent-example${example_suffix}.py $verbose --model $model $streaming
+	# uv run --with llama-stack python agent-example${example_suffix}.py $verbose --model $model $streaming
 fi
